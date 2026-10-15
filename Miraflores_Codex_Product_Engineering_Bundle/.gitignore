@@ -1,0 +1,17 @@
+node_modules/
+.next/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.env*
+!.env.example
+.DS_Store
+__pycache__/
+
+# Assignment plans, prompts, and original assignment brief
+/START_HERE.md
+*[Pp][Ll][Aa][Nn]*.md
+/docs/Case_Study_Redesign_the_Tax_Workpaper*.pdf
+prompts/
+*[Pp][Rr][Oo][Mm][Pp][Tt]*.md
+*[Pp][Rr][Oo][Mm][Pp][Tt]*.txt

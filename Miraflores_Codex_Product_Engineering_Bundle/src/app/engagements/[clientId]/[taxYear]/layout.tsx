@@ -1,0 +1,30 @@
+import type { ReactNode } from "react";
+import { notFound, redirect } from "next/navigation";
+import { currentActor, listIdentities } from "@/lib/auth/session";
+import { HttpError, publicIdentity } from "@/lib/auth/permissions";
+import { getEngagement, engagementStatistics } from "@/lib/engagements/queries";
+import { getPreferences } from "@/lib/workpaper/preferences";
+import { AppShell } from "@/components/app-shell";
+import { VersionPicker } from "@/components/version-picker";
+
+export const dynamic = "force-dynamic";
+export default async function EngagementLayout({ children, params }: { children: ReactNode; params: Promise<{ clientId: string; taxYear: string }> }) {
+  const actor = await currentActor(); if (!actor) redirect("/firm");
+  const { clientId, taxYear: year } = await params; const taxYear = Number(year);
+  if (!/^\d{4}$/.test(year)) notFound();
+  let engagement;
+  try { engagement = await getEngagement(actor, clientId, taxYear); }
+  catch (error) { if (error instanceof HttpError && [403,404].includes(error.status)) notFound(); throw error; }
+  const identities = await listIdentities();
+  const staff = actor.role !== "client";
+  const preference = staff ? await getPreferences(actor, clientId, taxYear) : null;
+  const statistics = preference ? await engagementStatistics(actor, clientId, taxYear, preference.selectedVersion) : null;
+  return <AppShell actor={publicIdentity(actor)} identities={identities} engagement={engagement}>
+    <div className="page-heading engagement-heading"><div><span className="eyebrow">{clientId} <span aria-hidden="true">/</span> {taxYear} TAX YEAR</span><h1>{engagement.name}</h1><p>Married filing jointly <span className="inline-dot">·</span> Federal 1040 <span className="inline-dot">·</span> California 540NR</p></div><span className="status-label neutral">{engagement.readiness}</span></div>
+    {staff && preference && statistics && <>
+      <div className="engagement-toolbar"><VersionPicker key={actor.id} clientId={clientId} taxYear={taxYear} initial={preference} versions={statistics.versions}/><span className="fine-print">Original engine results · read-only</span></div>
+      <section className="summary-grid compact" aria-label="Engagement data"><div className="summary-card"><span>Available documents</span><strong>{statistics.documentCount}</strong><small>Received by the workpaper date</small></div><div className="summary-card"><span>Computed return lines</span><strong>{statistics.lineCount}</strong><small>In your selected version</small></div><div className="summary-card"><span>Review actions</span><strong className="text-value">Not built yet</strong><small>Source tracing starts in Phase 2</small></div></section>
+    </>}
+    {children}
+  </AppShell>;
+}
