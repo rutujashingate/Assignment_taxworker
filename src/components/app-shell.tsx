@@ -33,11 +33,11 @@ export function AppShell({ children, actor, identities, engagement }: {
     </aside>
     <div className="workspace">
       <header className="topbar">
-        <div className="breadcrumb"><span>Workspace</span><span aria-hidden="true">/</span>{engagement ? <><Link href="/firm">Engagements</Link><span aria-hidden="true">/</span><strong>{engagement.name}</strong></> : <strong>Engagements</strong>}</div>
+        <div className="breadcrumb"><Link href={actor?.role === "client" ? "/engagements/CL-20417/2025/workflow" : "/firm"}>Workspace</Link><span aria-hidden="true">/</span>{engagement ? <><Link href="/firm">Engagements</Link><span aria-hidden="true">/</span><strong>{engagement.name}</strong></> : <strong>Engagements</strong>}</div>
         <IdentitySwitcher identities={identities} current={actor}/>
       </header>
       <div className="demo-strip"><span className="pill">DEMO</span> Workpaper date: June 23, 2026 <span className="strip-divider">·</span> Phase 1 foundation</div>
-      <main id="main-content" className="main-content">{children}</main>
+      <main id="main-content" className="main-content">{actor?.role === "client" && <aside className="client-guidance"><strong>You are viewing the client workspace.</strong><p>Firm search, import details and computed-version preferences are available to staff. To try those Phase 1 features, choose a preparer in the Demo identity selector above. Client tasks and approvals are planned for Phase 5.</p></aside>}{children}</main>
       <footer className="workspace-footer"><span>Miraflores Workpaper</span><span>One household. Every decision traceable.</span></footer>
     </div>
   </div>;

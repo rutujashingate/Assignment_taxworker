@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
 import { createSession, actorFromToken, listIdentities } from "../src/lib/auth/session";
 import { assertSameOrigin, publicIdentity } from "../src/lib/auth/permissions";
-import { getEngagement, searchEngagements, engagementStatistics } from "../src/lib/engagements/queries";
+import { getEngagement, searchEngagements, engagementStatistics, getImportStatus } from "../src/lib/engagements/queries";
 import { availableAgencyRecords, availableClientEvidence } from "../src/lib/packet/availability";
 import { setupDatabase, actor } from "./helpers";
 
@@ -35,7 +35,18 @@ describe("server authorization and sessions", () => {
     for (const id of ["cu-01", "cu-02"]) {
       await expect(searchEngagements(await actor(id), "Okafor")).rejects.toMatchObject({ status: 403 });
       await expect(engagementStatistics(await actor(id), "CL-20417", 2025, "v3")).rejects.toMatchObject({ status: 403 });
+      await expect(getImportStatus(await actor(id), "CL-20417", 2025)).rejects.toMatchObject({ status: 403 });
     }
+  });
+  test("import overview returns only scoped database metadata, never packet content", async () => {
+    const person = await actor("st-04");
+    const status = await getImportStatus(person, "CL-20417", 2025);
+    expect(Object.keys(status).sort()).toEqual(["byteLength","documentCount","extractedValueCount","importedAt","packetHash","pageCount","versions"]);
+    expect(status).toMatchObject({ packetHash: "ee01f8508bd2fd9854754b82fd9c4a055bdc55e2778a132002a25381c412ad19", byteLength: 1943262, documentCount: 74, pageCount: 199, extractedValueCount: 3012 });
+    expect(status.versions.map(version => version.version)).toEqual(["v1","v2","v3"]);
+    expect(Number.isFinite(Date.parse(status.importedAt))).toBe(true);
+    expect(JSON.stringify(status)).not.toMatch(/printed_content|ev-0492|ssn|signing_key|raw_json|msg-08|D71|D72/);
+    await expect(getImportStatus(person, "CL-other", 2025)).rejects.toMatchObject({ status: 403 });
   });
   test("response allow-lists exclude sensitive source and identity fields", async () => {
     for (const id of ["st-04", "cu-01"]) {

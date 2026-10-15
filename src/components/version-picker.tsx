@@ -26,7 +26,8 @@ export function VersionPicker({ clientId, taxYear, initial, versions }: {
     <select id="computed-version" value={preference.selectedVersion} disabled={saving || Boolean(error)} onChange={event => void save(event.target.value)}>
       {versions.map(version => <option key={version.version} value={version.version}>{version.version}{version.version === "v3" ? " · latest" : " · historical"}</option>)}
     </select>
-    <span className="save-status" role="status">{saving ? "Saving…" : `Saved · revision ${preference.revision}`}</span>
+    <span className="save-status" role="status">{saving ? "Saving…" : preference.revision ? `Saved · revision ${preference.revision}` : "Default view · choose a version to save"}</span>
+    <noscript><p className="fine-print">Enable JavaScript to save a different computed-version preference. Navigation and identity selection work without it.</p></noscript>
     {error && <div className="preference-error"><p role="alert">{error}</p><button className="text-button" onClick={() => window.location.reload()}>Reload current preference</button></div>}
   </div>;
 }

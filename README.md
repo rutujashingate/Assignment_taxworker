@@ -1,6 +1,6 @@
 # Miraflores Workpaper — Phase 1
 
-A local, persistent foundation for the one supplied Okafor–Lindqvist 2025 engagement. Firm search, signed demo identities, scoped server access, immutable packet import and audited viewing preferences work. The five engagement destinations clearly label later features as **not built yet**.
+A local, persistent foundation for the one supplied Okafor–Lindqvist 2025 engagement. Firm search, signed demo identities, scoped server access, immutable packet import and audited viewing preferences work. Review Desk shows a staff-only import overview. Later product features clearly say **not built yet**.
 
 ## Run locally
 
@@ -15,7 +15,9 @@ npm run db:import
 npm run dev
 ```
 
-If the database already exists, skip `createdb`. Open **http://127.0.0.1:3000** and choose Priya Raman in the demo identity selector. Search for Okafor, CL-20417 or 2025; open the engagement and change the computed version. Refresh to confirm persistence. Choose a client identity to inspect the restricted client entry.
+If the database already exists, skip `createdb`. Open **http://127.0.0.1:3000**. Leave **Start as** set to Priya Raman and click **Open workspace**. Search for Okafor, CL-20417 or 2025, or click **Open workpaper**. Review Desk displays the packet's imported document/page/value counts and original SHA-256. Change **Computed version**, wait for its saved revision, and refresh to confirm persistence. The header identity selector groups firm staff and restricted clients separately; choosing a client opens the unfinished client entry, where firm tools are unavailable.
+
+Workspace entry and navigation also work without JavaScript: the identity form creates the same signed, audited session on the server, then redirects. The header provides a **Switch identity** submit button in that mode. Saving a computed-version preference requires JavaScript and displays a message when it is disabled.
 
 The default connection is the local Unix-socket database `postgresql:///miraflores_workpaper?host=/tmp`, using your OS database user. To use another connection, provide `DATABASE_URL` to the process. `.env.example` documents the optional setting; no secret file is required. Migration/import commands read process environment variables; when using a connection other than the default, supply the same DATABASE_URL to each command and the app.
 
