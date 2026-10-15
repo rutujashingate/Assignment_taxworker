@@ -48,6 +48,10 @@ The local development database is `miraflores_workpaper`; tests use `miraflores_
 
 ## Files changed
 
+The application has been relocated from the prompt bundle to the main `Miraflores` repository directory. Paths below are relative to that root. Original plans, START_HERE and the assignment PDF remain in the ignored reference bundle; the original JSON moved unchanged to root `data/`. Root npm commands require no subfolder navigation. The empty root npm stub was replaced by the application's complete lockfile; prior generated build/test artifacts were preserved outside the repository before rebuilding.
+
+Relocation verification passed from the repository root: packet validator, 17 unit/integration tests, four production-browser tests, lint, standalone typecheck, production build, repeat migration and idempotent import. `npm run dev` started successfully from root and served `/firm` with HTTP 200 and the identity selector rendered; the smoke-test server was then stopped. Comparison with the prior commit confirmed all 55 relocated tracked files were present, with source code, tests, migrations, dependency versions and source JSON unchanged. Next.js generated its standard root `AGENTS.md` guidance on the first development start.
+
 54 files were created. The six supplied documents/data files were not edited. Additional support files beyond the proposed list are the shared version/placeholder components, error/404 pages, test helpers, this validation report and AI-use disclosure.
 
 ```text

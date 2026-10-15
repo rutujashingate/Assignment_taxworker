@@ -4,7 +4,7 @@ Source precedence: original three-page company assignment, original JSON and emb
 
 ## Original workspace
 
-The delivered bundle contained START_HERE, three Markdown plans, the original assignment PDF and the JSON packet. No application, package scripts, styles, tests, database configuration or Git repository existed. Phase 1 uses this bundle as its app root without moving or modifying those six files.
+The delivered bundle contained START_HERE, three Markdown plans, the original assignment PDF and the JSON packet. No application, package scripts, styles, tests, database configuration or Git repository existed at initial inspection. The application now lives in the main `Miraflores` repository directory. Original plans, prompts and the assignment PDF remain in `Miraflores_Codex_Product_Engineering_Bundle/`; the unchanged JSON packet is runtime data at root `data/`. Implementation documentation lives at root `docs/`.
 
 Available tooling: Node 22.17.1, npm 10.9.2 and local PostgreSQL 16.14. PostgreSQL was reachable before implementation. Docker and pnpm were unavailable. No application DATABASE_URL or session-signing environment variable was configured.
 

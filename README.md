@@ -4,7 +4,7 @@ A local, persistent foundation for the one supplied Okafor–Lindqvist 2025 enga
 
 ## Run locally
 
-Requires Node 22.17+ and PostgreSQL 16+. Run from this directory:
+Requires Node 22.17+ and PostgreSQL 16+. Run from the main `Miraflores` repository directory, where `package.json` now lives:
 
 ```sh
 npm ci
@@ -46,7 +46,9 @@ npm run test:e2e
 - Viewing preferences are per identity and engagement. Writes validate an expected revision, serialize competing changes and commit exactly one audit event with the update. A stale write returns 409.
 - Engine versions and original values are immutable. No tax engine is rerun; no filing, signature or external integration is claimed.
 
-See [data inventory](docs/DATA_INVENTORY.md), [validation report](docs/PHASE_1_VALIDATION.md) and the original [execution playbook](docs/Miraflores_03_Codex_Execution_Plan.md). Continue with **Phase 2 only** once Phase 1's gate passes.
+Application source, runtime data, database migrations, scripts and tests live in the repository root. The original plans, prompts and assignment PDF remain in the ignored `Miraflores_Codex_Product_Engineering_Bundle/` reference folder.
+
+See [data inventory](docs/DATA_INVENTORY.md), [validation report](docs/PHASE_1_VALIDATION.md) and the local original [execution playbook](Miraflores_Codex_Product_Engineering_Bundle/docs/Miraflores_03_Codex_Execution_Plan.md). Continue with **Phase 2 only** once Phase 1's gate passes.
 
 ## Documentation consulted
 
