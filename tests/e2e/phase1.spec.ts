@@ -34,6 +34,45 @@ test("clients cannot call internal APIs or see staff content", async ({ page }) 
   await expect(page.getByLabel("Computed version")).toHaveCount(0);
   const html = await page.content(); expect(html).not.toMatch(/ev-0492|signing_key|raw_json|ip_pin|msg-08/);
 });
+test("signed sessions keep database preferences across identity changes", async ({ page, request }) => {
+  await page.goto("/firm");
+  await page.getByLabel("Demo identity").selectOption("st-03");
+  await expect(page.getByRole("heading",{name:"Engagements",exact:true})).toBeVisible();
+
+  const originalSession = (await page.context().cookies()).find(cookie => cookie.name === "miraflores_demo");
+  expect(originalSession).toBeDefined();
+  expect(originalSession?.httpOnly).toBe(true);
+  expect(originalSession?.sameSite).toBe("Strict");
+  expect(await page.evaluate(() => document.cookie.includes("miraflores_demo"))).toBe(false);
+
+  await page.getByRole("link",{name:"Open Okafor–Lindqvist"}).click();
+  const picker = page.getByLabel("Computed version");
+  const target = await picker.inputValue() === "v1" ? "v2" : "v1";
+  await picker.selectOption(target);
+  await expect(page.getByRole("status").filter({hasText:"Saved · revision"})).toBeVisible();
+
+  await page.getByLabel("Demo identity").selectOption("cu-02");
+  await expect(page.getByRole("heading",{name:"Questions, tasks & approvals"})).toBeVisible();
+  expect((await page.request.get(endpoint)).status()).toBe(403);
+  expect((await request.get("/api/engagements",{headers:{Cookie:`miraflores_demo=${originalSession!.value}`}})).status()).toBe(401);
+
+  await page.getByLabel("Demo identity").selectOption("st-03");
+  await expect(page.getByRole("heading",{name:"Engagements",exact:true})).toBeVisible();
+  const newSession = (await page.context().cookies()).find(cookie => cookie.name === "miraflores_demo");
+  expect(newSession).toBeDefined();
+  expect(newSession?.value === originalSession?.value).toBe(false);
+  const saved = await page.request.get(endpoint);
+  expect(saved.status()).toBe(200);
+  expect((await saved.json()).selectedVersion).toBe(target);
+
+  // Discard browser storage except the signed identity cookie. The viewing
+  // preference must still come from PostgreSQL after the page reloads.
+  await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+  await page.getByRole("link",{name:"Open Okafor–Lindqvist"}).click();
+  await expect(page.getByLabel("Computed version")).toHaveValue(target);
+  await page.reload();
+  await expect(page.getByLabel("Computed version")).toHaveValue(target);
+});
 test("anonymous, forged, future, and cross-origin requests are rejected", async ({ request }) => {
   expect((await request.get("/api/engagements")).status()).toBe(401);
   expect((await request.get("/api/engagements",{headers:{Cookie:"miraflores_demo=st-03","X-Role":"partner"}})).status()).toBe(401);
