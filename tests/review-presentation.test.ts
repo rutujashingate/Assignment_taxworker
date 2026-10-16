@@ -3,7 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { packetSchema,type Packet } from '../src/lib/packet/schema';
 import { createEvidenceIndex } from '../src/lib/evidence/resolver';
 import { runIndependentChecks } from '../src/lib/review/checks';
-import { issuePresentation,recommendIssue } from '../src/lib/review/presentation';
+import { issuePresentation,recommendIssue,reviewGuidance,passedCheckPresentation } from '../src/lib/review/presentation';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ReadableRecord } from '../src/components/readable-record';
+import { referenceLabel } from '../src/lib/evidence/format';
 import type { CheckResult,IssueView } from '../src/lib/review/types';
 let packet:Packet,checks:CheckResult[];
 beforeAll(async()=>{packet=packetSchema.parse(JSON.parse(await readFile('data/okafor_lindqvist_2025_packet.json','utf8')));checks=runIndependentChecks(createEvidenceIndex(packet));});
@@ -34,4 +38,32 @@ test('recommendation prioritizes actionable work and personal assignments withou
 test('explained and resolved items do not masquerade as the next open review task',()=>{
   const rows=checks.filter(c=>c.outcome!=='pass').map((c,i)=>issue(c,i%2?'explained':'resolved_with_evidence'));
   expect(recommendIssue(rows,'st-01')).toBeUndefined();
+});
+test('the W-2 control explains the actual contribution without displaying internal objects',()=>{
+  const check=checks.find(c=>c.code==='W2_CONTRIBUTION_COUNT')!,before=JSON.stringify(check);
+  expect(passedCheckPresentation(check)).toEqual({title:'Wages are counted once',summary:'D09 and D10 are matching copies of the same W-2. The return counts D09 once. No duplicate wage contribution was found.'});
+  expect(JSON.stringify(check)).toBe(before);
+});
+test('all six review items have concrete source-checking instructions with honest uncertainty',()=>{
+  for(const check of checks.filter(c=>c.outcome!=='pass')){
+    const before=JSON.stringify(check),guide=reviewGuidance(check);
+    expect(guide.summary.length).toBeGreaterThan(30);expect(guide.steps).toHaveLength(2);
+    expect(guide.steps.every(s=>s.length>40)).toBe(true);expect(JSON.stringify(check)).toBe(before);
+  }
+  expect(reviewGuidance(checks.find(c=>c.code==='CHARITY_AMOUNT_UNCLEAR')!).steps.join(' ')).toContain('Keep this item Waiting');
+  expect(reviewGuidance(checks.find(c=>c.code==='INTEREST_SWEEP_OVERLAP')!).steps.join(' ')).toContain('Confirm they describe the same interest');
+  expect(reviewGuidance({code:'CA_PAYMENT_YEAR',observed:{sourceState:'Required source is unavailable.'},expected:{}}).summary).toBe('Required source is unavailable.');
+});
+test('nested records preserve values, readable labels and missing states without raw JSON',()=>{
+  const data={duplicateImageGroups:[{documents:['D09','D10'],usedDocuments:['D09']}],pipelineConfidence:0.41,verified:false,amount:null,empty:[],text:'<script>unsafe</script>'};
+  const before=JSON.stringify(data),html=renderToStaticMarkup(createElement(ReadableRecord,{value:data}));
+  for(const text of ['Matching document copies','Counted in the return','Pipeline Confidence','0.41','No','Not supplied','None recorded','D09','D10'])expect(html).toContain(text);
+  expect(html).not.toContain('duplicateImageGroups');expect(html).not.toContain('[object Object]');expect(html).not.toContain('<script>');expect(html).toContain('&lt;script&gt;');
+  expect(JSON.stringify(data)).toBe(before);
+});
+test('agency links use readable labels while the underlying reference remains unchanged',()=>{
+  const ref='agency:/ftb_account/tax_year_2025_payments';
+  expect(referenceLabel(ref,ref)).toBe('Agency record · California tax account · Tax year 2025 payments');
+  expect(referenceLabel('py:/2024/a~1b~0c','raw')).toBe('Prior year · 2024 · A/b~c');
+  expect(referenceLabel('ev-0538','Interest income')).toBe('Interest income');
 });

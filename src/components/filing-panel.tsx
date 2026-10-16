@@ -1,4 +1,5 @@
 'use client';
+import { ReadableRecord } from './readable-record';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { FilingModel,getFilings } from '@/lib/season/service';
@@ -18,7 +19,7 @@ export function FilingPanel({data,base}:{data:Data;base:string}) {
     {error&&<p role="alert">{error}</p>}{!data.filings.length&&<p>No filing simulation is available at this source date. Later replay simulations remain saved and reappear when the clock advances.</p>}
     {data.filings.map(raw=>{const f=raw as FilingView;const act=(action:string)=>command({action,id:f.id,expectedRevision:f.revision});return <article className="filing-card" key={f.id} data-testid="filing-card"><div className="filing-card-heading"><h3>{f.parentId?'Amendment branch':'Original return simulation'}</h3><span className="status-label neutral">SIMULATED · {f.status.replaceAll('_',' ')}</span></div><code>{f.id}</code><p>Revision {f.revision}{f.snapshotHash&&<> · Frozen/submitted snapshot SHA-256 <code>{f.snapshotHash}</code></>}</p>
       {f.approval&&<p>Demonstration authorization: {f.approval.current?'current':'stale or historical'} · {f.approval.source} · {f.approval.at}</p>}
-      {data.client&&<details open><summary>Original v3 amounts and separate modeled estimates</summary><p>No accurate final liability is asserted. Proposal fingerprint: <code>{f.proposalHash}</code></p><pre className="reference-record">{JSON.stringify({originalEngineSummary:f.originalEngineSummary,rateBasedEstimates:f.modeledEstimates},null,2)}</pre></details>}
+      {data.client&&<details open><summary>Original v3 amounts and separate modeled estimates</summary><p>No accurate final liability is asserted. Proposal fingerprint: <code>{f.proposalHash}</code></p><ReadableRecord value={{originalEngineSummary:f.originalEngineSummary,rateBasedEstimates:f.modeledEstimates}}/></details>}
       {data.client&&f.status==='draft'&&<><p>I approve the displayed v3-based simulation and authorize this demonstration only. Modeled effects remain estimates and no real filing occurs.</p><button className="button" disabled={busy||!data.approvalAvailable} onClick={()=>act('approve')}>Approve & authorize simulation</button>{!data.approvalAvailable&&<p>The scripted approval date has not arrived.</p>}</>}
       {!data.client&&<>
         <AgencyAcknowledgments events={f.events??[]}/>
@@ -37,8 +38,8 @@ export function FilingPanel({data,base}:{data:Data;base:string}) {
         {f.parentId&&f.status==='submitted'&&<p>No amended-return acknowledgments are supplied. Amendment acceptance is not implemented; original-return responses cannot be reused.</p>}
         {!f.parentId&&['submitted','federal_accepted'].includes(f.status)&&!f.nextResponseAvailable&&<p>No next scripted acknowledgment is available at this source date. Advance the season clock to continue.</p>}
         {f.correction&&<p>Identity overlay: {f.correction.ref}. Original household entry and engine output are unchanged.</p>}
-        {f.amendmentDiff&&<details open><summary>Amendment diff against frozen parent</summary><pre className="reference-record">{JSON.stringify(f.amendmentDiff,null,2)}</pre></details>}
-        {f.events&&<details><summary>Simulation event history</summary><pre className="reference-record">{JSON.stringify(f.events,null,2)}</pre></details>}
+        {f.amendmentDiff&&<details open><summary>Amendment diff against frozen parent</summary><ReadableRecord value={f.amendmentDiff}/></details>}
+        {f.events&&<details><summary>Simulation event history</summary><ReadableRecord value={f.events}/></details>}
       </>}
       {f.snapshotHash&&<a className="button secondary" href={`/api${base}/exports?kind=client&id=${f.id}`}>Download safe client HTML</a>}
     </article>;})}

@@ -17,8 +17,8 @@ function GenericTemplate({ children }: { children: ReactNode }) {
   return <article className="source-sheet generic-template"><div className="source-template-label">STRUCTURED TEXT REPRESENTATION</div>{children}</article>;
 }
 
-export function DocumentPage({ document, selectedField, fieldHref, masked }: {
-  document: DocumentView; selectedField?: string; fieldHref: (ref: string) => string; masked: boolean;
+export function DocumentPage({ document, selectedField, fieldHref, masked, compact=false }: {
+  document: DocumentView; selectedField?: string; fieldHref: (ref: string) => string; masked: boolean; compact?:boolean;
 }) {
   const located = printedFields(document.page.printed_content, document.values).sort((a,b) => a.location.status === "matched" && b.location.status === "matched" ? a.location.start - b.location.start : 0);
   const fragments: ReactNode[] = []; let offset = 0;
@@ -40,7 +40,7 @@ export function DocumentPage({ document, selectedField, fieldHref, masked }: {
     {document.type === "W-2" || /^1099-/u.test(document.type) ? <TaxFormTemplate type={document.type}>{contents}</TaxFormTemplate>
       : ["books_profit_loss", "books_transaction_detail", "books_report", "mileage_log", "rental_ledger"].includes(document.type) ? <LedgerTemplate>{contents}</LedgerTemplate>
         : ["donation_receipt", "foreign_bank_statement", "payment_confirmation", "rental_owner_statement"].includes(document.type) ? <StatementTemplate>{contents}</StatementTemplate> : <GenericTemplate>{contents}</GenericTemplate>}
-    {!document.values.length ? <div className="evidence-gap" role="note"><strong>Missing extraction on this page</strong><p>The printed page is available, but the packet contains no extracted fields for page {document.page.page}. This is page-level evidence; no extracted-value ID or lot has been invented.</p>{typeof document.extraction.reason === "string" && <p>{document.extraction.reason}</p>}</div> : <section className="extracted-fields" aria-label="Pipeline extracted fields">
+    {!document.values.length ? <div className="evidence-gap" role="note"><strong>Missing extraction on this page</strong><p>The printed page is available, but the packet contains no extracted fields for page {document.page.page}. This is page-level evidence; no extracted-value ID or lot has been invented.</p>{typeof document.extraction.reason === "string" && <p>{document.extraction.reason}</p>}</div> : <details className="source-readings" open={!compact}><summary>Compare software readings ({document.values.length})</summary><section className="extracted-fields" aria-label="Pipeline extracted fields">
       <h3>Pipeline extracted fields <span className="count-tag">{document.values.length}</span></h3><p>Extraction confidence describes the pipeline reading. Human verification actions are not implemented in this workspace; confidence is not a CPA sign-off.</p>
       <div className="field-grid">{document.values.map(value => {
         const location = locatePrintedField(document.page.printed_content, value);
@@ -52,6 +52,6 @@ export function DocumentPage({ document, selectedField, fieldHref, masked }: {
           <small>{precise && location.status === "matched" ? "Printed label and value located in page text." : "Precise printed span not established. Use page-level evidence."}</small>
         </div>;
       })}</div>
-    </section>}
+    </section></details>}
   </section>;
 }

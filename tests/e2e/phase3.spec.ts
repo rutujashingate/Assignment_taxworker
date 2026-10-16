@@ -48,7 +48,8 @@ test("triage survives reload and another reviewer; all four filters work",async(
   const evidenceDetails=form.locator(".decision-evidence");if(!await evidenceDetails.evaluate(el=>(el as HTMLDetailsElement).open))await evidenceDetails.locator("summary").click();
   for(const ref of ["ev-0492","ev-0538"])await form.locator(`input[name="evidenceRefs"][value="${ref}"]`).check();
   await form.getByRole("button",{name:"Save review status",exact:true}).click();
-  await expect(page.getByRole("status",{name:"Triage save status"})).toHaveText(`Review saved · revision ${original.revision+1}`);
+  await expect(page.getByRole("status",{name:"Triage save status"})).toHaveText('Review saved');
+  expect((await getIssue(page)).revision).toBe(original.revision+1);
   await page.reload();await expect(page.getByLabel("Review state")).toHaveValue("investigating");
   await enter(page,"st-02");await expect(page.getByLabel("Reason or explanation")).toHaveValue("Comparing both printed sweep records in browser review.");
   await page.locator(".review-filters > summary").click();

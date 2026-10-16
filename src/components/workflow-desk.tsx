@@ -1,4 +1,5 @@
 'use client';
+import { ReadableRecord } from './readable-record';
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CollaborationData, ItemView, ItemKind } from '@/lib/collaboration/types';
@@ -23,7 +24,7 @@ function EvidenceRecord({value,names}:{value:unknown;names:Map<string,string>}) 
     {typeof record.question==='string'&&<><h4>{record.question}</h4><p className="collab-body">{String(record.answer)}</p><p className="fine-print">{String(record.answered_by)} · {String(record.answered_at)}</p></>}
     {typeof record.text==='string'&&<><p className="collab-body">{record.text}</p><p className="fine-print">{String(record.from)} · {String(record.sent_at)}</p></>}
     {Array.isArray(envelope.sourceRefs)&&<div className="collab-sources"><h4>Linked to source evidence</h4>{envelope.sourceRefs.map(ref=><code key={String(ref)}>{String(ref)} </code>)}</div>}
-    <details><summary>Evidence record details</summary><pre className="reference-record">{JSON.stringify(value,null,2)}</pre></details>
+    <details><summary>Evidence record details</summary><ReadableRecord value={value}/></details>
   </div>;
 }
 function MessageForm({item,api,client,canAnswerInternal,onSaved}:{item:ItemView;api:string;client:boolean;canAnswerInternal:boolean;onSaved:()=>void}) {
@@ -120,7 +121,7 @@ export function WorkflowDesk({initial,base,initialItem,questionDraft}:{initial:C
       {item.attachments.length>0&&<section className="collab-attachments"><h4>Persistent attachments</h4>{item.attachments.map(a=><article key={a.id}><strong>{a.name}</strong><small>{a.kind} · {names.get(a.createdBy)} · {new Date(a.createdAt).toLocaleString('en-US',{timeZone:'UTC'})+' UTC'}</small>{a.note&&<p>{a.note}</p>}{a.restricted?<p>Clearance required</p>:<><a href={`${api}/attachments/${a.id}`} className="text-button">Download {a.name}</a><button type="button" className="text-button" onClick={()=>void inspect(a.ref)}>View attachment evidence</button></>}</article>)}</section>}
       {item.status!=='closed'&&<><MessageForm key={`reply-${item.id}-${editorGeneration}`} item={item} api={api} client={data.client} canAnswerInternal={['preparer','reviewer','partner','quality_reviewer'].includes(data.people.find(p=>p.id===data.actorId)?.role??'')} onSaved={()=>void reload()}/><AttachForm key={`attach-${item.id}-${editorGeneration}`} item={item} api={api} onSaved={()=>void reload()}/></>}
       {!data.client&&(item.kind!=='review_note'||data.canReview)&&<EditForm key={`edit-${item.id}-${editorGeneration}`} item={item} api={api} people={data.people} onSaved={()=>void reload()}/>}
-      {!data.client&&<details className="edit-collaboration"><summary>Protected text</summary><p className="fine-print">Identifiers are masked by default. Only cleared firm staff can reveal the original; each reveal is logged.</p>{data.canReveal?<button type="button" className="text-button" onClick={()=>void reveal()}>Reveal protected thread text</button>:<p className="fine-print">Your identity does not have sensitive-data clearance.</p>}{revealed!==null&&<><button className="text-button" type="button" onClick={()=>setRevealed(null)}>Hide protected text</button><pre className="reference-record">{JSON.stringify(revealed,null,2)}</pre></>}</details>}
+      {!data.client&&<details className="edit-collaboration"><summary>Protected text</summary><p className="fine-print">Identifiers are masked by default. Only cleared firm staff can reveal the original; each reveal is logged.</p>{data.canReveal?<button type="button" className="text-button" onClick={()=>void reveal()}>Reveal protected thread text</button>:<p className="fine-print">Your identity does not have sensitive-data clearance.</p>}{revealed!==null&&<><button className="text-button" type="button" onClick={()=>setRevealed(null)}>Hide protected text</button><ReadableRecord value={revealed}/></>}</details>}
     </article>:<div className="panel empty-panel"><h3>Select a conversation</h3><p>Questions, notes and their supporting evidence appear here.</p></div>}
     {evidence!==null&&<aside className="panel collaboration-evidence" aria-label="Linked answer and source evidence"><div className="section-heading"><h3>Linked evidence</h3><button className="text-button" type="button" onClick={()=>setEvidence(null)}>Close evidence</button></div><EvidenceRecord value={evidence} names={names}/><p className="fine-print">Human-entered evidence does not alter original engine results. Source pages are simulated printed content.</p>{!data.client&&inspectableSource&&<Link prefetch={false} className="text-button" href={`${base}/return?ref=${encodeURIComponent(inspectableSource)}`}>Open Evidence Inspector</Link>}</aside>}
     </div></div>

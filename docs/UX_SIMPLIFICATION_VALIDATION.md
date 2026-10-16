@@ -72,3 +72,34 @@ No supplied JSON, original engine output, validation rule, database schema/migra
 The pre-existing working JSON has an extra leading newline, hash `975f9307b703888e8e44089b398d57157089bfa4a913c07aa85f299debbea7ef`. It was preserved. Normal strict tests/import validation still reject those changed bytes. `test:canonical` verifies the original `ee01f8508bd2fd9854754b82fd9c4a055bdc55e2778a132002a25381c412ad19` in an owned temporary copy, links the **current** code/tests/docs, uses real PostgreSQL and leaves the working source untouched. No integrity guard was relaxed to make a check pass.
 
 No independent first-time CPA usability study, complete assistive-technology/cross-browser certification, public deployment or personal video is claimed. Readable software and automated task completion are verified; the human must still review the experience and complete external submission steps.
+
+## Follow-up: guided CPA review and readable records
+
+The CPA reported that raw `duplicateImageGroups` JSON and an automatically opened issue still made the workflow unclear. Review now opens a task list and one recommended starting action. An issue opens only when selected. Each issue has three numbered steps: **Check the difference → Compare the evidence → Save your conclusion**. The evidence step provides two concrete checking instructions from the existing finding, actual linked documents/agency records, and an inspector before the save form. Software readings stay collapsed in this review context; the full document view retains them.
+
+The passing W-2 check now explains that D09/D10 match and only D09 contributes, instead of printing internal objects. Source, collaboration, history, simulation and authorized identifier details use labeled records/lists, preserving supplied values and existing masking. Agency links have readable names; their original typed references are unchanged. The firm landing page no longer repeats three oversized summary cards.
+
+The existing review operation still validates roles, source references and revisions, persists the conclusion, and appends its audit event. Evidence choices have document/field labels. Each status explains what it means; a source-backed resolution requires a reason and selected evidence. After saving, **Continue to next item** opens another unresolved item; the continuation also remains available for saved explained/resolved dispositions after refresh. **Request information** still creates only an unsent draft until explicitly submitted.
+
+Changed application files: firm and review pages; `presentation.ts` and evidence `format.ts`; shared `readable-record.tsx`; issue form, source inspector, document renderer, collaboration, history, filing and identifier-reveal presentation; scoped CSS. Tests add plain-language W-2, six issue instructions, readable nested/masked-state presentation, readable agency refs, and real browser source-backed save/reload/continue checks. Existing checklist/history tests assert the same evidence and five amounts using their readable representations.
+
+**Unfinished:** source-field corrections, formal verification/sign-offs and formal Submit for review remain unavailable. A saved issue resolution is a review conclusion and does not change computed tax amounts. No data, validation, database schema, API contract, permission or audit-history change was made. No commit, push or deployment occurred in this follow-up. Agent browser review is not an independent CPA usability study.
+
+### Follow-up verification actually run
+
+| Command | Result |
+|---|---|
+| `npm run test:canonical` | **133 passed, 14 files**; real isolated PostgreSQL, exact committed packet bytes, current source/tests |
+| `npm run test:e2e` | **45 passed, 2.7 minutes** against the final production build, including six guided-review journeys |
+| `npm run lint` | Passed |
+| `npm run typecheck` | Passed |
+| `npm run build` | Passed |
+| `npm run findings:check` | Passed; unchanged six findings and one passing control |
+| `npm run audit:check` | Passed; unchanged 70 requirement mappings |
+| `git diff --check` | Passed |
+
+Intermediate browser runs exposed an immediate URL-read race in a new continuation test and legacy assertions for JSON containers, raw object keys and unformatted amounts. The tests now await the actual destination and assert the same underlying evidence, false related-return presence flags, exact 9.86 exchange rate and five supplied scenario outcomes in their readable views. The complete 45-test suite subsequently passed. No tax-rule or permission change was used to fix these assertions.
+
+Fresh-session entry, roles, on-demand evidence, actual source comparisons, status persistence after refresh, linked client question creation, source-backed save/continue, no-JavaScript navigation, keyboard source access and desktop/tablet/mobile overflow checks passed. The existing filing/notice simulation, privacy/search/export and concurrent-edit regressions passed too. The five `after-*.png` captures above and all seven findings captures were refreshed from real masked Chromium views; their manifest hashes were verified. Original `before-*.png` captures remain historical.
+
+As before, ordinary `npm run test` / `npm run validate:packet` cannot pass their strict byte guard against the user's pre-existing leading-newline edit. This follow-up used the explicit canonical runner and left that working JSON unchanged. No new public deployment or personal video is supplied.

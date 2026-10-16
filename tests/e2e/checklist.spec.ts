@@ -45,21 +45,21 @@ test('E05 E06 R10 R11: prior evidence, absent related returns, retirement pages 
   await page.goto(`${base}/records/carryovers`);
   await page.getByRole('link',{name:'Inspect py:/carryovers_into_2025',exact:true}).click();
   await expect(page.locator('.inspector-ref')).toHaveText('py:/carryovers_into_2025');
-  await expect(page.locator('.reference-record')).toContainText('passive_1450_fremont');
+  await expect(page.getByRole('region',{name:'Source record',exact:true})).toContainText('Passive 1450 fremont');
   await page.goto(`${base}/records/k1`);
   await expect(page.getByRole('heading',{name:'Related entity returns are not supplied',exact:true})).toBeVisible();
   await page.getByText('Related returns · evidence stubs',{exact:true}).click();
   await page.getByRole('link',{name:'Inspect household:/related_returns',exact:true}).click();
-  await expect(page.locator('.reference-record')).toContainText('"in_this_packet": false');
+  await expect(page.getByRole('region',{name:'Source record',exact:true})).toContainText('In this packetNo');
   await page.goto(`${base}/records/retirement-foreign?ref=${encodeURIComponent('py:/basis_records/ira_nondeductible_basis_ngozi')}`);
   await expect(page.locator('.inspector-ref')).toHaveText('py:/basis_records/ira_nondeductible_basis_ngozi');
-  await expect(page.locator('.reference-record')).not.toBeEmpty();
+  await expect(page.getByRole('region',{name:'Source record',exact:true})).not.toBeEmpty();
   for(const id of ['D41','D42','D43','D36']){
     await page.goto(`${base}/documents/${id}`);await expect(page.getByTestId('printed-content')).not.toBeEmpty();
   }
   await page.goto(`${base}/records/retirement-foreign?ref=${encodeURIComponent('ref:fx.SEK.2025_average')}`);
   await expect(page.locator('.inspector-ref')).toHaveText('ref:fx.SEK.2025_average');
-  await expect(page.locator('.reference-record')).toHaveText('9.86');
+  await expect(page.getByRole('region',{name:'Source record',exact:true}).locator('.record-text')).toHaveText('9.86');
   await page.screenshot({path:'test-results/checklist-foreign-rate.png'});
 });
 

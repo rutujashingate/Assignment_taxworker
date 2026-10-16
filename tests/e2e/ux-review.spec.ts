@@ -17,10 +17,13 @@ test('fresh CPA entry identifies a next task, understands the discrepancy and op
   const p=await(await page.request.get(`${api}/preferences`)).json();if(p.selectedVersion!=='v3'){await page.request.post(`${api}/preferences`,{data:{selectedVersion:'v3',expectedRevision:p.revision}});await page.reload();}
   const nav=page.getByRole('navigation',{name:'Engagement',exact:true});await expect(nav.getByRole('link')).toHaveText(['01Review','02Tax Return','03Documents','04Tasks & Approvals','05History']);
   await expect(page.getByLabel('Demo identity')).toBeVisible();await expect(page.locator('.next-review .button')).toHaveText('Review next issue →');
-  for(const selector of ['.secondary-tools','.workpaper-data','.review-filters','.issue-technical'])expect(await page.locator(selector).evaluate(el=>(el as HTMLDetailsElement).open)).toBe(false);
+  for(const selector of ['.secondary-tools','.workpaper-data','.review-filters'])expect(await page.locator(selector).evaluate(el=>(el as HTMLDetailsElement).open)).toBe(false);
+  await expect(page.locator('#selected-finding')).toHaveCount(0);await expect(page.getByLabel('How to review')).toBeVisible();
   await expect(page.getByTestId('printed-content')).toHaveCount(0);await expect(page.locator('.finding-certainty')).not.toBeVisible();
   await page.locator('.next-review .button').click();await expect(page.locator('#selected-finding')).toBeVisible();
-  for(const text of ['What happened','Reported value','Supported value','Difference to review','Take the next step'])await expect(page.locator('#selected-finding').getByText(text,{exact:true})).toBeVisible();
+  for(const text of ['Reported value','Supported value','Difference to review'])await expect(page.locator('#selected-finding').getByText(text,{exact:true})).toBeVisible();
+  for(const text of ['1 Check the difference','2 Compare the evidence','3 Save your conclusion'])await expect(page.getByRole('heading',{name:text,exact:true})).toBeVisible();
+  expect(await page.locator('.issue-technical').evaluate(el=>(el as HTMLDetailsElement).open)).toBe(false);
   await expect(page.getByRole('link',{name:'Request information',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Explain',exact:true})).toBeVisible();
   await page.getByRole('link',{name:'View source evidence',exact:true}).click();await expect(page.locator('#evidence-inspector').getByTestId('printed-content')).toBeVisible();
   await page.getByRole('link',{name:'Close evidence and return to issue',exact:true}).click();await expect(page.getByTestId('printed-content')).toHaveCount(0);
@@ -52,12 +55,12 @@ test('Explain and Assign persist; a requested client question is saved only afte
 });
 
 test('role-specific actions and protected data remain enforced after simplification',async({page})=>{
-  for(const id of ['st-01','st-02','st-03']){await enter(page,id);await page.goto(`${base}/review`);await expect(page.getByRole('form',{name:'Issue triage'})).toBeVisible();await expect(page.getByLabel('Demo identity')).toHaveValue(id);}
-  await enter(page,'st-05');await page.goto(`${base}/review`);await expect(page.getByRole('form',{name:'Issue triage'})).toHaveCount(0);await expect(page.getByRole('link',{name:'Request information',exact:true})).toHaveCount(0);await expect(page.getByText('You have read-only access to tax review.',{exact:false})).toBeVisible();
+  for(const id of ['st-01','st-02','st-03']){await enter(page,id);await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('form',{name:'Issue triage'})).toBeVisible();await expect(page.getByLabel('Demo identity')).toHaveValue(id);}
+  await enter(page,'st-05');await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('form',{name:'Issue triage'})).toHaveCount(0);await expect(page.getByRole('link',{name:'Request information',exact:true})).toHaveCount(0);await expect(page.getByText('You have read-only access to tax review.',{exact:false})).toBeVisible();
   await page.locator('.secondary-tools > summary').click();await expect(page.getByRole('link',{name:'Firm administration',exact:true})).toBeVisible();expect((await page.request.post(`${api}/issues/CA_PAYMENT_YEAR%3AD68`,{data:{}})).status()).toBe(403);
   await enter(page,'cu-01');await page.goto(`${base}/workflow?request=CHARITY_AMOUNT_UNCLEAR%3AD64`);await expect(page.locator('.question-draft-context')).toHaveCount(0);await expect(page.getByRole('heading',{name:'Questions, tasks & approvals',exact:true})).toBeVisible();expect((await page.request.get(`${api}/issues`)).status()).toBe(403);
   await page.goto(`${base}/review`);await expect(page.getByRole('heading',{name:'Staff workspace',exact:true})).toBeVisible();await expect(page.locator('#finding-title')).toHaveCount(0);
-  await enter(page);await page.goto(`${base}/review`);await expect(page.getByRole('button',{name:'Record correction',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Submit for review',exact:true})).toHaveCount(0);await expect(page.locator('.unavailable-actions')).toContainText('Not available:');
+  await enter(page);await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('button',{name:'Record correction',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Submit for review',exact:true})).toHaveCount(0);await expect(page.locator('.unavailable-actions')).toContainText('Not available:');
 });
 
 test('review is keyboard-accessible and responsive with real before/after comparison captures',async({page})=>{
@@ -73,4 +76,43 @@ test('review is keyboard-accessible and responsive with real before/after compar
   const view=page.getByRole('link',{name:'View source evidence',exact:true});await tabTo(page,view);await expect(view).toBeFocused();expect(await view.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');await page.keyboard.press('Enter');
   await expect(page.getByTestId('printed-content')).toContainText('tax year 2024');await page.screenshot({path:'docs/screenshots/ux/after-evidence-desktop.png'});
   const role=await page.getByLabel('Demo identity').boundingBox();expect(role!.y).toBeGreaterThanOrEqual(0);expect(role!.y+role!.height).toBeLessThan(1050);
+});
+
+test('CPA sees a plain-language W-2 result and readable source records instead of JSON',async({page})=>{
+  await enter(page);await page.goto(`${base}/review`);
+  await expect(page.locator('#selected-finding')).toHaveCount(0);
+  await page.locator('.review-controls > summary').click();
+  await expect(page.getByRole('heading',{name:'Wages are counted once',exact:true})).toBeVisible();
+  await expect(page.locator('.review-controls')).toContainText('The return counts D09 once.');
+  await expect(page.locator('.review-desk')).not.toContainText('duplicateImageGroups');
+  await expect(page.locator('.review-desk')).not.toContainText('usedDocuments');
+  await page.goto(`${base}/review?${new URLSearchParams({issue:'CA_PAYMENT_YEAR:D68',ref:'agency:/ftb_account/tax_year_2025_payments'})}`);
+  const evidence=page.locator('#evidence-inspector');await expect(evidence.getByRole('heading',{name:'Source record',exact:true})).toBeVisible();
+  await expect(evidence.locator('.readable-record-list').first()).toContainText('3,500');await expect(evidence.locator('pre.reference-record')).toHaveCount(0);
+  await page.locator('.issue-technical > summary').click();await expect(page.locator('.finding-facts .readable-record').first()).toContainText('Return Claimed');
+  await expect(page.locator('#selected-finding')).not.toContainText('wrongYearPaymentsUsed');
+});
+
+test('CPA can follow the three steps, save a source-backed conclusion and continue to another item',async({page})=>{
+  await enter(page);const key='CA_PAYMENT_YEAR:D68';const original=(await(await page.request.get(`${api}/issues`)).json()).issues.find((i:{key:string})=>i.key===key);
+  try{
+    await page.goto(`${base}/review?${new URLSearchParams({issue:key})}`);
+    await expect(page.locator('.review-checklist')).toContainText('Check the tax year beside the September payment');
+    await page.getByRole('link',{name:'View source evidence',exact:true}).click();await expect(page.getByTestId('printed-content')).toContainText('tax year 2024');
+    await expect(page.locator('.source-readings')).not.toHaveAttribute('open');
+    await page.getByRole('link',{name:'Close evidence and return to issue',exact:true}).click();
+    await page.getByLabel('Review state').selectOption('resolved_with_evidence');
+    await expect(page.locator('.review-state-help')).toContainText('select the sources');
+    await page.getByLabel('Reason or explanation').fill('Reviewed printed payment designation and 2025 agency records. Tax correction remains a separate outstanding step.');
+    const source=page.locator('input[name="evidenceRefs"][value="doc:D68#page1"]');await source.check();await expect(source.locator('..')).toContainText('D68');
+    await page.getByRole('button',{name:'Save review status',exact:true}).click();await expect(page.getByRole('status',{name:'Triage save status'})).toHaveText('Review saved');
+    await expect(page.locator('.unavailable-actions')).toContainText('does not correct the tax return');
+    const saved=(await(await page.request.get(`${api}/issues`)).json()).issues.find((i:{key:string})=>i.key===key);expect(saved.status).toBe('resolved_with_evidence');expect(saved.evidenceRefs).toContain('doc:D68#page1');
+    await page.reload();await expect(page.getByLabel('Review state')).toHaveValue('resolved_with_evidence');await expect(source).toBeChecked();
+    const next=page.getByRole('link',{name:'Continue to next item →',exact:true}),href=await next.getAttribute('href');await next.click();await expect(page).toHaveURL(new URL(href!,page.url()).href);expect(new URL(page.url()).searchParams.get('issue')).not.toBe(key);
+    await page.getByRole('link',{name:'← Back to review list',exact:true}).click();await expect(page.locator('#selected-finding')).toHaveCount(0);
+  }finally{
+    const current=(await(await page.request.get(`${api}/issues`)).json()).issues.find((i:{key:string})=>i.key===key);
+    expect((await page.request.post(`${api}/issues/${encodeURIComponent(key)}`,{data:{version:original.version,status:original.status,assigneeId:original.assigneeId,note:original.note,evidenceRefs:original.evidenceRefs,expectedRevision:current.revision}})).status()).toBe(200);
+  }
 });

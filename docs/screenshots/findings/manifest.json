@@ -6,7 +6,7 @@
     "sourceRef": "doc:D31#page32",
     "sourcePage": "doc:D31#page32",
     "screenshot": "screenshots/findings/BROKER_PAGE_UNEXTRACTED.png",
-    "sha256": "10c72de94569e9276620c5a9e5c5a029f1a9fea182952216b6d97064ca9a3ba0",
+    "sha256": "ff80f9aebb6d4cc17980b943be947926ea04b256b93c6bd4f5009799c0433a66",
     "masked": true
   },
   {
@@ -16,7 +16,7 @@
     "sourceRef": "ev-1076",
     "sourcePage": "doc:D68#page1",
     "screenshot": "screenshots/findings/CA_PAYMENT_YEAR.png",
-    "sha256": "8182b04398336505e9115be61b5f0875bdad8b2803575c0e172b1d93eb787ad4",
+    "sha256": "ed097b4b7246be8ec3b2899dc005b43945bbad5f5df8617f6a5433598514078a",
     "masked": true
   },
   {
@@ -26,7 +26,7 @@
     "sourceRef": "doc:D15#page3",
     "sourcePage": "doc:D15#page3",
     "screenshot": "screenshots/findings/CARD_RECEIPTS_OVERLAP.png",
-    "sha256": "703332e121ad8400425062251db586fd38bbce0fbaba13c65f86b14bfa979048",
+    "sha256": "89b641a2e8abf1c9a6778633367766d78feb6d7c69dcecd40b61f55dca166bb6",
     "masked": true
   },
   {
@@ -36,7 +36,7 @@
     "sourceRef": "ev-1049",
     "sourcePage": "doc:D64#page1",
     "screenshot": "screenshots/findings/CHARITY_AMOUNT_UNCLEAR.png",
-    "sha256": "d4e65ee1ece37c00f2d21da6aa10163d060a24f1c6dc37ce11f0d9cf0ea74291",
+    "sha256": "a0bf2bb783c7bb34aebe062f608ccd9f8d4225e47e43cfdd285749ad624a5168",
     "masked": true
   },
   {
@@ -46,7 +46,7 @@
     "sourceRef": "ev-0492",
     "sourcePage": "doc:D28#page1",
     "screenshot": "screenshots/findings/INTEREST_SWEEP_OVERLAP.png",
-    "sha256": "e0f0baec379e36a63ab2fd5e12dac837b435ae02c8dca6231ac494da125f4a5c",
+    "sha256": "3c44c8bb6e1428481198d3c815b000637285f0cd75018c08cbf8081a45767e86",
     "masked": true
   },
   {
@@ -56,7 +56,7 @@
     "sourceRef": "doc:D23#page2",
     "sourcePage": "doc:D23#page2",
     "screenshot": "screenshots/findings/MILEAGE_DUPLICATE_PAGES.png",
-    "sha256": "c844a0ed777f6026516e2f9b518dad1d6652caf3f76e29316776e1dfad055491",
+    "sha256": "aaef2a611b095057dfc61dc1ab0ab4b9cc19d2d8162e189f58653b2c5ff8d57d",
     "masked": true
   },
   {
@@ -66,7 +66,7 @@
     "sourceRef": "ev-0035",
     "sourcePage": "doc:D09#page1",
     "screenshot": "screenshots/findings/W2_CONTRIBUTION_COUNT.png",
-    "sha256": "bdbbf06ff9be9e2b9f5fa8042117ae60ddf031b25b3a7c4a3eb2a1a127e7cd48",
+    "sha256": "3a8a5cb6bc2fc5b55296c7b2c7351cfb54fba444d6bb3ccb478be875912df774",
     "masked": true
   }
 ]
