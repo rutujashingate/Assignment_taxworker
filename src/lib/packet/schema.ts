@@ -44,6 +44,9 @@ export const packetSchema = z.object({
 export type Packet = z.infer<typeof packetSchema>;
 export type PacketDocument = z.infer<typeof documentSchema>;
 export type PacketVersion = z.infer<typeof versionSchema>;
+export type PacketLine = PacketVersion["lines"][number];
+export type PacketValue = Packet["extracted_values"][number];
+export type PacketPage = PacketDocument["pages"][number];
 
 export function assertPacketCounts(packet: Packet) {
   const counts = packet.documents.reduce<Record<string, number>>((a, d) => {

@@ -11,10 +11,12 @@ export default async function Review({ params }: { params: Promise<{ clientId: s
   const { clientId, taxYear } = await params;
   const status = await getImportStatus(actor, clientId, Number(taxYear));
   return <section className="panel foundation-overview" aria-labelledby="review-heading">
-    <span className="eyebrow">PHASE 1 · WORKSPACE OVERVIEW</span>
+    <span className="eyebrow">WORKSPACE OVERVIEW</span>
     <h2 id="review-heading">Review Desk</h2>
     <p>The original packet is loaded in PostgreSQL. Your signed session and saved viewing preference survive refresh.</p>
     <div className="foundation-actions">
+      <Link prefetch={false} className="button" href={`/engagements/${clientId}/${taxYear}/return`}>Open tax return</Link>
+      <Link prefetch={false} className="button secondary" href={`/engagements/${clientId}/${taxYear}/documents`}>Browse client documents</Link>
       <a className="button" href="#computed-version">Choose computed version</a>
       <Link className="button secondary" href={`/firm?q=${encodeURIComponent(clientId)}`}>Find this household</Link>
     </div>
@@ -35,6 +37,6 @@ export default async function Review({ params }: { params: Promise<{ clientId: s
         <div><dt>SHA-256</dt><dd><code>{status.packetHash}</code></dd></div>
       </dl>
     </details>
-    <div className="phase-boundary"><h3>Review features come next</h3><p>Source tracing and document browsing are planned for Phase 2. Issue checks are planned for Phase 3. Tax corrections, approvals and scenarios are not built yet.</p></div>
+    <div className="phase-boundary"><h3>Evidence views are ready</h3><p>Open the tax return to trace numbers to printed sources, or browse client documents to see their tax-line usage. Issue checks are planned for Phase 3. Tax corrections, approvals and scenarios are not built yet.</p></div>
   </section>;
 }

@@ -1,6 +1,6 @@
-# Miraflores Workpaper — Phase 1
+# Miraflores Workpaper — Phase 2
 
-A local, persistent foundation for the one supplied Okafor–Lindqvist 2025 engagement. Firm search, signed demo identities, scoped server access, immutable packet import and audited viewing preferences work. Review Desk shows a staff-only import overview. Later product features clearly say **not built yet**.
+A persistent workpaper for the one supplied Okafor–Lindqvist 2025 engagement. Phase 2 adds a searchable return, typed source tracing, a bidirectional Evidence Inspector and printed document pages. Firm search, signed demo identities, immutable packet import and audited viewing preferences remain in place. Review workflow, corrections and approvals are not built yet.
 
 ## Run locally
 
@@ -15,7 +15,13 @@ npm run db:import
 npm run dev
 ```
 
-If the database already exists, skip `createdb`. Open **http://127.0.0.1:3000**. Leave **Start as** set to Priya Raman and click **Open workspace**. Search for Okafor, CL-20417 or 2025, or click **Open workpaper**. Review Desk displays the packet's imported document/page/value counts and original SHA-256. Change **Computed version**, wait for its saved revision, and refresh to confirm persistence. The header identity selector groups firm staff and restricted clients separately; choosing a client opens the unfinished client entry, where firm tools are unavailable.
+If the database already exists, skip `createdb`. Open **http://127.0.0.1:3000**. Leave **Start as** set to Priya Raman and click **Open workspace**, then **Open workpaper**. Your identity is the CPA; the engagement is the client. The header selector also offers restricted taxpayer identities for permission demonstrations.
+
+Choose **v3 · latest**, then **Tax Return**. Start at `F1040.2b` and follow `SchB.4 → SchB.2 → SchB.1.1 / SchB.1.2 → ev-0492 / ev-0538`. The inspector shows the actual D28/D29 printed interest fields, pipeline reading/confidence and a separate unrecorded human-verification status. To go in reverse, open **Documents**, search **D29**, open it and click its underlined interest field. **Tax line usage** links back to `F1040.2b` and the other actual dependent lines.
+
+Every available page is addressable, including `/engagements/CL-20417/2025/documents/D31?page=32`, which explicitly has no extraction. Printed text is preserved; the ambiguous D64 receipt is not rewritten to match the extraction. Source representations are simulated from packet text, with conservative literal-field matching and no invented PDF geometry.
+
+The index reports full-packet **74 / 68 extracted / 2 partial / 4 not extracted** totals. At the fixed June 23, 2026 clock, **72** documents and **197** pages are accessible; two future records remain withheld. The pure resolver supports all 199 supplied pages when given the later availability date, but replay controls are outside Phase 2.
 
 Workspace entry and navigation also work without JavaScript: the identity form creates the same signed, audited session on the server, then redirects. The header provides a **Switch identity** submit button in that mode. Saving a computed-version preference requires JavaScript and displays a message when it is disabled.
 
@@ -44,13 +50,14 @@ npm run test:e2e
 
 - The original 1,943,262 JSON bytes are stored as BYTEA with a database SHA-256 check, beside JSONB and indexed projections. The importer requires the recorded source hash and is idempotent. Database triggers reject modifications to source projections and the append-only audit.
 - All eight identities are seeded; only five staff and two clients are active at the fixed June 23, 2026 cursor. Signed HTTP-only cookies resolve identity server-side. No role header or client-supplied role is trusted.
-- Client summaries and staff search use explicit response allow-lists. There are no raw-packet, source-page, internal-note or export APIs in Phase 1. Future source-reading routes must add masking and sensitive-view logging before exposing any packet content.
+- Source access is staff-only and engagement-scoped on the server, including `GET /api/engagements/:clientId/:taxYear/evidence?ref=…`. Clients cannot retrieve workpaper evidence through direct requests. Uncleared staff receive masked SSNs, IP PINs, dates of birth and full account/routing numbers in both printed text and structured records. Source opens append a durable view audit before content is returned; a logging failure surfaces an error. No raw-packet, internal-note or export API is exposed.
+- The typed resolver follows actual `inputs` and `sources`, handles all supplied reference families and RFC 6901 escaping, indexes direct and downstream usage, and returns explicit missing sources, cycles and display-limit states. Six prior-asset provenance labels remain unresolved. Field highlights require a unique literal reading tied to a printed label; uncertain matches stay at page level.
 - Viewing preferences are per identity and engagement. Writes validate an expected revision, serialize competing changes and commit exactly one audit event with the update. A stale write returns 409.
 - Engine versions and original values are immutable. No tax engine is rerun; no filing, signature or external integration is claimed.
 
 Application source, runtime data, database migrations, scripts and tests live in the repository root. The original plans, prompts and assignment PDF remain in the ignored `Miraflores_Codex_Product_Engineering_Bundle/` reference folder.
 
-See [data inventory](docs/DATA_INVENTORY.md), [validation report](docs/PHASE_1_VALIDATION.md) and the local original [execution playbook](Miraflores_Codex_Product_Engineering_Bundle/docs/Miraflores_03_Codex_Execution_Plan.md). Continue with **Phase 2 only** once Phase 1's gate passes.
+See the original [data inventory](docs/DATA_INVENTORY.md), [Phase 1 report](docs/PHASE_1_VALIDATION.md), [Phase 2 report](docs/PHASE_2_VALIDATION.md), and local [execution playbook](Miraflores_Codex_Product_Engineering_Bundle/docs/Miraflores_03_Codex_Execution_Plan.md). Phase 3 issue checks require a separate request.
 
 ## Documentation consulted
 

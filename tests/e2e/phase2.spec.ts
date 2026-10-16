@@ -1,0 +1,110 @@
+import { readFile } from "node:fs/promises";
+import { test, expect, type Page } from "@playwright/test";
+
+const base = "/engagements/CL-20417/2025";
+const evidence = `${base.replace("/engagements/","/api/engagements/")}/evidence`;
+async function start(page: Page, identity = "st-01") {
+  await page.goto("/firm");
+  await page.getByLabel("Demo identity").selectOption(identity);
+  await expect(page.getByRole("heading",{name:"Engagements",exact:true})).toBeVisible();
+  await page.getByRole("link",{name:"Open workpaper"}).click();
+  const picker = page.getByLabel("Computed version");
+  if (await picker.inputValue() !== "v3") {
+    await picker.selectOption("v3");
+    await expect(page.getByRole("status").filter({hasText:"Saved · revision"})).toBeVisible();
+  }
+  await page.getByRole("navigation",{name:"Engagement"}).getByRole("link",{name:"Tax Return",exact:true}).click();
+  await expect(page.getByRole("heading",{name:"Tax Return",exact:true})).toBeVisible();
+}
+test("v3 interest follows actual inputs to both exact printed source fields", async ({ page }) => {
+  await start(page);
+  const inspector = page.locator("#evidence-inspector");
+  await expect(inspector.locator(".inspector-ref")).toHaveText("F1040.2b");
+  await expect(inspector.locator(".inspector-amount")).toHaveText("$6,450");
+  for (const ref of ["SchB.4","SchB.2","SchB.1.1"]) await inspector.getByRole("link",{name:`Follow input ${ref}`,exact:true}).click();
+  await expect(inspector.locator(".inspector-amount")).toHaveText("$1,840");
+  await inspector.getByRole("link",{name:"Open source ev-0492",exact:true}).click();
+  await expect(inspector.getByTestId("printed-field-ev-0492")).toContainText("1,840.00");
+  await expect(inspector.locator("mark")).toContainText("box 1 interest 1,840.00");
+  await expect(inspector.locator(".extraction-reading")).toContainText("99%");
+  await expect(inspector.locator(".extraction-reading")).toContainText("Human verificationNot recorded");
+  await page.getByRole("navigation",{name:"Engagement"}).getByRole("link",{name:"Tax Return",exact:true}).click();
+  await inspector.getByRole("link",{name:"Trace SchB.1.2",exact:true}).click();
+  await inspector.getByRole("link",{name:"Open source ev-0538",exact:true}).click();
+  await expect(inspector.getByTestId("printed-field-ev-0538")).toContainText("Box 1 interest income 1,840.00");
+  await expect(inspector.locator("mark")).toContainText("Box 1 interest income 1,840.00");
+  await inspector.getByRole("link",{name:"Open D29 document",exact:true}).click();
+  await expect(page.getByRole("heading",{name:/D29 · 2025 Form 1099-INT/})).toBeVisible();
+  await page.screenshot({path:"test-results/phase2-interest-source.png",fullPage:true});
+});
+test("document field reverse usage opens the dependent return line", async ({ page }) => {
+  await start(page);
+  await page.getByRole("navigation",{name:"Engagement"}).getByRole("link",{name:"Documents",exact:true}).click();
+  await page.getByRole("searchbox",{name:"Search documents"}).fill("D29");
+  await page.getByRole("button",{name:"Search documents",exact:true}).click();
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await page.getByRole("link",{name:"Open document D29",exact:true}).click();
+  await page.getByTestId("printed-field-ev-0538").click();
+  await expect(page.locator(".inspector-ref")).toHaveText("ev-0538");
+  const usage = page.getByRole("region",{name:"Tax line usage",exact:true});
+  await expect(usage.getByRole("link",{name:"Open return line SchB.1.2",exact:true})).toBeVisible();
+  await usage.getByRole("link",{name:"Open return line F1040.2b",exact:true}).click();
+  await expect(page.locator(".inspector-ref")).toHaveText("F1040.2b");
+  await expect(page.locator(".inspector-amount")).toHaveText("$6,450");
+});
+test("all-document states, unextracted page 32 and ambiguous receipt remain honest", async ({ page }) => {
+  await start(page);
+  await page.goto(`${base}/documents`);
+  await expect(page.getByText("Full packet: 74 documents",{exact:true})).toBeVisible();
+  await expect(page.getByText("68 extracted · 2 partial · 4 not extracted",{exact:true})).toBeVisible();
+  await expect(page.locator("tbody tr")).toHaveCount(72);
+  await page.getByLabel("Extraction state").selectOption("partial");
+  await page.getByRole("button",{name:"Search documents",exact:true}).click();
+  await expect(page.locator("tbody tr")).toHaveCount(2);
+  await page.getByRole("link",{name:"Open document D31",exact:true}).click();
+  await page.getByRole("link",{name:"Page 32",exact:true}).click();
+  await expect(page.getByText("Missing extraction on this page",{exact:true})).toBeVisible();
+  await expect(page.getByTestId("printed-content")).toContainText("M18 Ironwood REIT");
+  await expect(page.getByTestId("printed-content")).toContainText("proceeds 250.00 basis 310.00");
+  await expect(page.locator(".inspector-ref")).toHaveText("doc:D31#page32");
+  await expect(page.getByText(/No computed line usage recorded for this exact reference/)).toBeVisible();
+  await page.goto(`${base}/documents/D30?page=32`);
+  await expect(page.getByText(/Superseded in v3; original preserved/)).toBeVisible();
+  await expect(page.getByText("Missing extraction on this page",{exact:true})).toBeVisible();
+  await page.goto(`${base}/documents/D64?page=1&field=ev-1049`);
+  await expect(page.getByTestId("printed-content")).toContainText("$?,500.00");
+  await expect(page.locator(".extraction-reading")).toContainText("$1,500");
+  await expect(page.locator(".extraction-reading")).toContainText("41%");
+  await expect(page.locator("mark")).toHaveCount(0);
+  await expect(page.getByText("Precise printed span not established. Use page-level evidence.",{exact:true})).toBeVisible();
+});
+test("source APIs and direct pages enforce client privacy, masking and the source clock", async ({ page }) => {
+  const packet = JSON.parse(await readFile("data/okafor_lindqvist_2025_packet.json","utf8"));
+  await start(page,"st-04");
+  const response = await page.request.get(`${evidence}?ref=ev-0015`);
+  expect(response.status()).toBe(200);
+  const content = await response.text();
+  expect(content).toContain("[REDACTED"); expect(content).not.toContain(packet.household.people[0].ssn);
+  await page.goto(`${base}/documents/D08`);
+  expect(await page.content()).not.toContain(packet.household.people[0].ssn);
+  for (const ref of ["D71","D72","msg-08","agency:/efile/0"]) expect((await page.request.get(`${evidence}?ref=${encodeURIComponent(ref)}`)).status()).toBe(404);
+  await page.goto(`${base}/documents/D71`); await expect(page.getByRole("heading",{name:"Workspace unavailable."})).toBeVisible();
+  await page.goto("/firm");
+  await page.getByLabel("Demo identity").selectOption("cu-01");
+  await expect(page.getByRole("heading",{name:"Questions, tasks & approvals"})).toBeVisible();
+  expect((await page.request.get(`${evidence}?ref=ev-0538`)).status()).toBe(403);
+  await page.goto(`${base}/documents/D29`);
+  await expect(page.getByRole("heading",{name:"Staff workspace",exact:true})).toBeVisible();
+  expect(await page.content()).not.toContain("1,840.00");
+});
+test("mobile printed fields and inspector support keyboard navigation", async ({ page }) => {
+  await start(page);
+  await page.setViewportSize({width:390,height:844});
+  await page.goto(`${base}/documents/D29`);
+  await page.getByTestId("printed-field-ev-0538").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".inspector-ref")).toHaveText("ev-0538");
+  await expect(page.getByRole("link",{name:"Open return line F1040.2b",exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await page.screenshot({path:"test-results/phase2-mobile-inspector.png",fullPage:true});
+});
