@@ -12,10 +12,10 @@ function TraceBranch({ trace, href, depth = 0 }: { trace: DisplayTrace; href: (r
   </li>;
 }
 
-export function EvidenceInspector({ inspection, base, selectedLine, masked, includeDocument = true }: {
-  inspection: EvidenceInspection; base: string; selectedLine?: string; masked: boolean; includeDocument?: boolean;
+export function EvidenceInspector({ inspection, base, selectedLine, masked, includeDocument = true, referenceHref }: {
+  inspection: EvidenceInspection; base: string; selectedLine?: string; masked: boolean; includeDocument?: boolean; referenceHref?: (ref: string) => string;
 }) {
-  const href = (ref: string) => evidenceHref(base, ref, selectedLine);
+  const href = referenceHref ?? ((ref: string) => evidenceHref(base, ref, selectedLine));
   const { node, extraction, line, source } = inspection;
   return <aside id="evidence-inspector" className="panel evidence-inspector" aria-labelledby="inspector-heading" tabIndex={-1}>
     <header className="inspector-heading"><span className="eyebrow">SOURCE & CALCULATION</span><h2 id="inspector-heading">Evidence Inspector</h2><code className="inspector-ref">{node.ref}</code><p>{node.label}</p></header>

@@ -1,5 +1,6 @@
 import { pgTable, text, integer, boolean, timestamp, date, jsonb, customType, primaryKey, bigint, uuid } from "drizzle-orm/pg-core";
 import type { PacketDocument, PacketVersion } from "../packet/schema";
+import type { CheckResult, IssueState } from "../review/types";
 
 const bytes = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
 export const packetImports = pgTable("packet_import", {
@@ -56,3 +57,10 @@ export const auditEvents = pgTable("audit_event", {
   beforeJson: jsonb("before_json"), afterJson: jsonb("after_json").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+export const workpaperIssues = pgTable("workpaper_issue", {
+  clientId: text("client_id").notNull(), taxYear: integer("tax_year").notNull(), version: text("version").notNull(),
+  issueKey: text("issue_key").notNull(), finding: jsonb("finding").$type<CheckResult>().notNull(), fingerprint: text("fingerprint").notNull(),
+  status: text("status").$type<IssueState>().notNull().default("open"), assigneeId: text("assignee_id"), note: text("note").notNull().default(""),
+  evidenceRefs: jsonb("evidence_refs").$type<string[]>().notNull().default([]), revision: integer("revision").notNull().default(1),
+  updatedBy: text("updated_by").notNull(), updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, t => [primaryKey({columns:[t.clientId,t.taxYear,t.version,t.issueKey]})]);

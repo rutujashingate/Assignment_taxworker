@@ -36,7 +36,7 @@ export function AppShell({ children, actor, identities, engagement }: {
         <div className="breadcrumb"><Link href={actor?.role === "client" ? "/engagements/CL-20417/2025/workflow" : "/firm"}>Workspace</Link><span aria-hidden="true">/</span>{engagement ? <><Link href="/firm">Engagements</Link><span aria-hidden="true">/</span><strong>{engagement.name}</strong></> : <strong>Engagements</strong>}</div>
         <IdentitySwitcher identities={identities} current={actor}/>
       </header>
-      <div className="demo-strip"><span className="pill">DEMO</span> Workpaper date: June 23, 2026 <span className="strip-divider">·</span> Phase 2 evidence tracing</div>
+      <div className="demo-strip"><span className="pill">DEMO</span> Workpaper date: June 23, 2026 <span className="strip-divider">·</span> Phase 3 independent review</div>
       <main id="main-content" className="main-content">{actor?.role === "client" && <aside className="client-guidance"><strong>You are viewing the client workspace.</strong><p>Firm search, source documents and return tracing are available to staff. Choose a preparer in the Demo identity selector above to use the CPA workspace. Client tasks and approvals are planned for Phase 5.</p></aside>}{children}</main>
       <footer className="workspace-footer"><span>Miraflores Workpaper</span><span>One household. Every decision traceable.</span></footer>
     </div>
