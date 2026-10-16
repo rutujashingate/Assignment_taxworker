@@ -1,0 +1,13 @@
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentActor,listIdentities } from '@/lib/auth/session';
+import { publicIdentity } from '@/lib/auth/permissions';
+import { globalSearch } from '@/lib/firm/search';
+import { AppShell } from '@/components/app-shell';
+export const dynamic='force-dynamic';
+export default async function Search({searchParams}:{searchParams:Promise<{q?:string;kind?:string;page?:string}>}) {
+  const actor=await currentActor();if(!actor)redirect('/firm');if(actor.role==='client')redirect('/engagements/CL-20417/2025/workflow');
+  const search=await searchParams;const q=typeof search.q==='string'?search.q:'';const kind=typeof search.kind==='string'?search.kind:'all';const data=await globalSearch(actor,q,kind,Number(search.page??1));
+  const href=(page:number)=>`/firm/search?${new URLSearchParams({q,kind,page:String(page)})}`;
+  return <AppShell actor={publicIdentity(actor)} identities={await listIdentities()}><div className="page-heading"><div><span className="eyebrow">FIRM SEARCH</span><h1>Find evidence & work</h1><p>One supplied household. Search authorized records by client, amount, tax line, document or lot.</p></div></div><form method="get" className="panel collab-filters" aria-label="Global search"><label>Search records<input type="search" name="q" defaultValue={q} maxLength={200} placeholder="Okafor, $1,840, F1040.2b, D29, X260"/></label><label>Record type<select name="kind" aria-label="Record type" defaultValue={kind}>{['all','amount','engagement','line','document','page','field','lot','asset','prior','conversation'].map(k=><option key={k} value={k}>{k}</option>)}</select></label><button className="button primary">Search all records</button></form><p className="fine-print">Sensitive identifiers are masked in search for every role. Future packet evidence is excluded. Open a permitted source to inspect or explicitly reveal a protected field with an audit log.</p><section className="panel record-card" aria-label="Global search results"><h2>{q?`${data.total} matches`:'Search the supplied engagement'}</h2>{q&&data.rows.length===0&&<p>No authorized records match this query.</p>}<ol className="global-results">{data.rows.map((r,i)=><li key={`${r.kind}:${r.ref}:${i}`}><span>{r.kind} · {r.clientId} · {r.taxYear}</span><Link prefetch={false} href={r.href}>{r.label}</Link><p>{r.detail}</p><code>{r.ref}</code></li>)}</ol><nav className="pagination" aria-label="Search pages">{data.page>1&&<Link href={href(data.page-1)}>Previous</Link>}<span>Page {data.page}</span>{data.page*data.pageSize<data.total&&<Link href={href(data.page+1)}>Next</Link>}</nav></section></AppShell>;
+}

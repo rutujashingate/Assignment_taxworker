@@ -4,7 +4,8 @@ export type Reference =
   | { kind: "document"; id: string }
   | { kind: "page"; documentId: string; page: number }
   | { kind: "questionnaire" | "message" | "call" | "asset" | "household" | "timeline" | "version"; id: string }
-  | { kind: "pointer"; root: "prior_years" | "tax_agency_records"; tokens: string[] }
+  | { kind: "pointer"; root: "prior_years" | "tax_agency_records" | "household"; tokens: string[] }
+  | { kind: "computed"; version: string; tokens: string[] }
   | { kind: "parameter"; name: string }
   | { kind: "fx"; currency: string; rate: string }
   | { kind: "unknown"; label: string };
@@ -35,6 +36,10 @@ export function parseReference(ref: string): Reference | null {
   for (const [prefix, kind] of [["qa", "questionnaire"], ["msg", "message"], ["call", "call"]] as const) {
     if (new RegExp(`^${prefix}-\\d{2}$`, "u").test(ref)) return { kind, id: ref };
   }
+  const computed = /^computed:(v[123]):(.*)$/u.exec(ref);
+  if(computed){const tokens=pointerTokens(computed[2]);return tokens&&['summary','assets','carryovers_out','tax_effect_rates'].includes(tokens[0])?{kind:'computed',version:computed[1],tokens}:null;}
+  if(ref.startsWith('computed:'))return null;
+  if(ref.startsWith('household:/')) {const tokens=pointerTokens(ref.slice(10));return tokens?{kind:'pointer',root:'household',tokens}:null;}
   for (const [prefix, root] of [["py:", "prior_years"], ["agency:", "tax_agency_records"]] as const) {
     if (ref.startsWith(prefix)) { const tokens = pointerTokens(ref.slice(prefix.length)); return tokens ? { kind: "pointer", root, tokens } : null; }
   }

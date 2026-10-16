@@ -89,3 +89,17 @@ export const collaborationNotifications = pgTable("collaboration_notification", 
   id: uuid("id").primaryKey(), itemId: uuid("item_id").notNull(), recipientId: text("recipient_id").notNull(), event: text("event").notNull(),
   readAt: timestamp("read_at",{withTimezone:true}), createdAt: timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
 });
+
+export const salesLotReviews = pgTable('sales_lot_review', {
+  clientId:text('client_id').notNull(),taxYear:integer('tax_year').notNull(),version:text('version').notNull(),lineKey:text('line_key').notNull(),
+  status:text('status').$type<'reviewed'|'needs_review'>().notNull(),reason:text('reason').notNull(),sourceRefs:jsonb('source_refs').$type<string[]>().notNull(),
+  revision:integer('revision').notNull(),updatedBy:text('updated_by').notNull(),updatedAt:timestamp('updated_at',{withTimezone:true}).defaultNow().notNull(),
+},t=>[primaryKey({columns:[t.clientId,t.taxYear,t.version,t.lineKey]})]);
+export const firmStandards = pgTable('firm_standard', {
+  packetHash:text('packet_hash').primaryKey(),record:jsonb('record').notNull(),revision:integer('revision').notNull(),updatedBy:text('updated_by').notNull(),
+  updatedAt:timestamp('updated_at',{withTimezone:true}).notNull().defaultNow(),
+});
+export const timeEntries = pgTable('work_time_entry', {
+  id:uuid('id').primaryKey(),clientId:text('client_id').notNull(),taxYear:integer('tax_year').notNull(),actorId:text('actor_id').notNull(),category:text('category').notNull(),
+  minutes:integer('minutes').notNull(),workedOn:date('worked_on').notNull(),note:text('note').notNull(),createdAt:timestamp('created_at',{withTimezone:true}).defaultNow().notNull(),
+});

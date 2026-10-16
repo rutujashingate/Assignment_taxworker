@@ -9,7 +9,7 @@ import { createEvidenceIndex, type EvidencePacket, type EvidenceIndex, type Evid
 import { isSensitiveValue, maskEvidence } from "./privacy";
 import { pageReference } from "./references";
 
-export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYear: number) {
+export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYear: number, options: {maskSensitive?:boolean} = {}) {
   assertStaff(actor); await authorizeEngagement(actor, clientId, taxYear);
   const [engagement] = await db.select().from(engagements).where(and(eq(engagements.clientId, clientId), eq(engagements.taxYear, taxYear))).limit(1);
   if (!engagement) throw new HttpError(404, "Engagement not found.");
@@ -36,10 +36,11 @@ export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYe
     household: section("household"), client: section("client"), prior_years: section("prior_years"),
     tax_agency_records: section("tax_agency_records"), timeline: section("timeline"), engine_reference: section("engine_reference"), fx_rates: section("fx_rates"),
   };
-  const index = createEvidenceIndex(actor.sensitiveDataClearance ? packet : maskEvidence(packet), preference.selectedVersion);
+  const masked=options.maskSensitive===true||!actor.sensitiveDataClearance;
+  const index = createEvidenceIndex(masked ? maskEvidence(packet) : packet, preference.selectedVersion);
   const inventory = { total: packet.documents.length, extracted: 0, partial: 0, not_extracted: 0 };
   for (const doc of packet.documents) inventory[doc.extraction.status]++;
-  return { index, inventory, masked: !actor.sensitiveDataClearance, actor, clientId, taxYear,
+  return { index, inventory, masked, actor, clientId, taxYear,
     rules: packet.engine_reference.rules as Record<string, string> };
 }
 export type EvidenceWorkspace = Awaited<ReturnType<typeof getEvidenceWorkspace>>;
@@ -120,5 +121,6 @@ export function documentIndex(workspace: EvidenceWorkspace, query = "", state = 
     states: documents.reduce((counts, doc) => { counts[doc.extraction.status]++; return counts; }, { extracted: 0, partial: 0, not_extracted: 0 }),
     rows: rows.map(doc => ({ id: doc.id, title: doc.title, type: doc.document_type, issuer: doc.issuer, taxYear: doc.tax_year,
       pages: doc.pages.length, status: doc.extraction.status, values: doc.extraction.values, reason: doc.extraction.reason,
-      superseded: workspace.index.version.documents_superseded.includes(doc.id), firstPageRef: pageReference(doc.id, doc.pages[0]?.page ?? 1) })) };
+      superseded: workspace.index.version.documents_superseded.includes(doc.id),computedUsed:workspace.index.version.documents_used.includes(doc.id),usageCount:workspace.index.usage(doc.id).length,
+      firstPageRef: pageReference(doc.id, doc.pages[0]?.page ?? 1) })) };
 }

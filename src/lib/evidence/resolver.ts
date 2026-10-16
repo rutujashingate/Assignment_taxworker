@@ -10,7 +10,7 @@ export type ResolvedEvidence = Base & (
   | { kind: "extracted_value"; extraction: PacketValue }
   | { kind: "document"; document: PacketDocument }
   | { kind: "page"; documentId: string; page: PacketPage; missingExtraction: boolean }
-  | { kind: "questionnaire" | "message" | "call" | "asset" | "household" | "timeline" | "version" | "pointer" | "parameter" | "fx"; data: unknown }
+  | { kind: "questionnaire" | "message" | "call" | "asset" | "household" | "timeline" | "version" | "computed" | "pointer" | "parameter" | "fx"; data: unknown }
 );
 export type EvidenceResolution = ResolvedEvidence | { status: "missing_source" | "invalid_reference"; ref: string; label: string; relatedRefs: string[] };
 export type TraceNode = { resolution: EvidenceResolution; children: TraceNode[]; cycle: boolean; truncated: boolean };
@@ -24,7 +24,7 @@ function relatedSources(value: unknown): string[] {
     if (["sources", "refs", "documents"].includes(key)) {
       const candidates = Array.isArray(child) ? child : [child];
       refs.push(...candidates.filter((item): item is string => typeof item === "string"));
-    } else if (["source", "document"].includes(key) && typeof child === "string") refs.push(child);
+    } else if (["source", "source_document", "document"].includes(key) && typeof child === "string") refs.push(child);
     else if (child && typeof child === "object") refs.push(...relatedSources(child));
   }
   return [...new Set(refs)];
@@ -79,7 +79,7 @@ export function createEvidenceIndex(packet: EvidencePacket, selectedVersion = "v
         return data ? { ...base(String(data.question ?? data.id), relatedSources(data)), kind: reference.kind, data } : missing(ref);
       }
       case "pointer": {
-        const target = readPointer(reference.root === "prior_years" ? packet.prior_years : agency, reference.tokens);
+        const target = readPointer(reference.root === "prior_years" ? packet.prior_years : reference.root === 'household' ? packet.household : agency, reference.tokens);
         if (!target.found || (reference.root === "tax_agency_records" && target.value === null)) return missing(ref);
         let refs = relatedSources(target.value);
         // The delivered prior-return schema stores evidence in a sibling line_sources map.
@@ -89,6 +89,11 @@ export function createEvidenceIndex(packet: EvidencePacket, selectedVersion = "v
           if (provenance.found && typeof provenance.value === "string") refs = [...refs, provenance.value];
         }
         return { ...base(ref, refs), kind: "pointer", data: target.value };
+      }
+      case 'computed': {
+        const record=versions.find(v=>v.version===reference.version);if(!record)return missing(ref);
+        const target=readPointer(record,reference.tokens);
+        return target.found?{...base(`${reference.version} · original computed record`,relatedSources(target.value)),kind:'computed',data:target.value}:missing(ref);
       }
       case "asset": {
         const prior = packet.prior_years.asset_records;

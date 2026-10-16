@@ -4,7 +4,7 @@ import { and, eq, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db/client';
 import { auditEvents, collaborationItems as items, collaborationMessages as messages, collaborationAttachments as attachments,
-  collaborationNotifications as notifications, engagements, engagementAccess, identities, packetAuxiliary, sourceDocuments, sourceValues, workpaperIssues, type Actor } from '../db/schema';
+  collaborationNotifications as notifications, engagements, engagementAccess, identities, packetAuxiliary, sourceDocuments, sourceValues, workpaperIssues, salesLotReviews, timeEntries, firmStandards, type Actor } from '../db/schema';
 import { authorizeEngagement, assertStaff, HttpError } from '../auth/permissions';
 import { DEFAULT_AS_OF, type Packet, type PacketValue } from '../packet/schema';
 import { availableClientEvidence } from '../packet/availability';
@@ -126,7 +126,10 @@ export async function getCollaboration(actor:Actor,clientId:string,taxYear:numbe
   const filingGate=actor.role==='client'?null:await getFilingGate(actor,clientId,taxYear);
   const issueRevisions=actor.role==='client'?[]:await db.select({key:workpaperIssues.issueKey,version:workpaperIssues.version,revision:workpaperIssues.revision}).from(workpaperIssues)
     .where(and(eq(workpaperIssues.clientId,clientId),eq(workpaperIssues.taxYear,taxYear))).orderBy(workpaperIssues.version,workpaperIssues.issueKey);
-  const cursor=createHash('sha256').update(JSON.stringify({views,notices,issueRevisions})).digest('hex');
+  const lotRevisions=actor.role==='client'?[]:await db.select({key:salesLotReviews.lineKey,version:salesLotReviews.version,revision:salesLotReviews.revision}).from(salesLotReviews).where(and(eq(salesLotReviews.clientId,clientId),eq(salesLotReviews.taxYear,taxYear))).orderBy(salesLotReviews.version,salesLotReviews.lineKey);
+  const ownTime=actor.role==='client'?[]:await db.select({id:timeEntries.id}).from(timeEntries).where(and(eq(timeEntries.clientId,clientId),eq(timeEntries.taxYear,taxYear),eq(timeEntries.actorId,actor.id))).orderBy(timeEntries.id);
+  const standardRevisions=actor.role==='client'?[]:await db.select({revision:firmStandards.revision}).from(firmStandards).where(eq(firmStandards.packetHash,engagement[0].packetHash));
+  const cursor=createHash('sha256').update(JSON.stringify({views,notices,issueRevisions,lotRevisions,ownTime,standardRevisions})).digest('hex');
   return {items:matched,people:allPeople,notifications:notices,
     deadlines:supplied.deadlines.filter(d=>actor.role!=='client'||!d.what.startsWith('Internal:')),
     assignments:actor.role==='client'?[]:Object.entries(supplied.assignment_at_start).map(([role,actorId])=>({role,actorId})),

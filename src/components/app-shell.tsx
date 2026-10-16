@@ -13,7 +13,7 @@ export function AppShell({ children, actor, identities, engagement }: {
   const path = usePathname(); const base = engagement ? `/engagements/${engagement.clientId}/${engagement.taxYear}` : "";
   const destinations = actor?.role === "client" ? [["workflow", "Client workspace", "05"]] : [
     ["review", "Review Desk", "01"], ["return", "Tax Return", "02"], ["documents", "Documents", "03"],
-    ["workflow", "Workflow", "04"], ["history", "History & Scenarios", "05"],
+    ["workflow", "Workflow", "04"], ["records", "CPA Records", "05"], ["history", "History & Scenarios", "06"],
   ];
   return <div className="app-frame">
     <a href="#main-content" className="skip-link">Skip to content</a>
@@ -24,6 +24,7 @@ export function AppShell({ children, actor, identities, engagement }: {
       </Link>
       <div className="nav-caption">WORKSPACE</div>
       {actor?.role !== "client" && <Link className={`nav-link ${path === "/firm" ? "active" : ""}`} href="/firm"><span aria-hidden="true">▦</span> Engagements</Link>}
+      {actor && actor.role !== "client" && <nav className="firm-tools" aria-label="Firm tools"><Link prefetch={false} className="nav-link" href="/firm/search">Search all records</Link><Link prefetch={false} className="nav-link" href="/firm/time">My work time</Link><Link prefetch={false} className="nav-link" href="/coverage">Coverage</Link>{actor.role === "firm_administrator" && <Link prefetch={false} className="nav-link" href="/firm/admin">Firm administration</Link>}</nav>}
       {engagement && <>
         <div className="nav-caption engagement-caption">{engagement.taxYear} ENGAGEMENT</div>
         <nav aria-label="Engagement">
@@ -37,7 +38,7 @@ export function AppShell({ children, actor, identities, engagement }: {
         <div className="breadcrumb"><Link href={actor?.role === "client" ? "/engagements/CL-20417/2025/workflow" : "/firm"}>Workspace</Link><span aria-hidden="true">/</span>{engagement ? <><Link href="/firm">Engagements</Link><span aria-hidden="true">/</span><strong>{engagement.name}</strong></> : <strong>Engagements</strong>}</div>
         <IdentitySwitcher identities={identities} current={actor}/>
       </header>
-      <div className="demo-strip"><span className="pill">DEMO</span> Workpaper date: June 23, 2026 <span className="strip-divider">·</span> Phase 5 collaboration</div>
+      <div className="demo-strip"><span className="pill">DEMO</span> Workpaper date: June 23, 2026 <span className="strip-divider">·</span> Phase 6 CPA records</div>
       {engagement&&actor&&<LiveChanges key={actor.id} actorId={actor.id} clientId={engagement.clientId} taxYear={engagement.taxYear}/>}
       <main id="main-content" className="main-content">{actor?.role === "client" && <aside className="client-guidance"><strong>You are viewing the client workspace.</strong><p>Answer questions shared by your tax team and attach supporting evidence below. Choose a preparer in the Demo identity selector above to use the CPA workspace.</p></aside>}{children}</main>
       <footer className="workspace-footer"><span>Miraflores Workpaper</span><span>One household. Every decision traceable.</span></footer>

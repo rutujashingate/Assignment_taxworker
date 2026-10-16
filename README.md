@@ -1,6 +1,6 @@
-# Miraflores Workpaper — Phase 5
+# Miraflores Workpaper — Phase 6
 
-A persistent workpaper for the one supplied Okafor–Lindqvist 2025 engagement. Workflow now supports internal/client conversations, linked questions and dated client answers, blocking review notes, assigned tasks, deadlines, notifications and persistent attachments. Review Desk, source tracing and printed documents remain available. Phase 4 tax corrections/sign-offs and Phase 7 filing are not built yet.
+A persistent workpaper for the one supplied Okafor–Lindqvist 2025 engagement. CPA Records provides 15 tax-area views with the existing Evidence Inspector, a virtualized sales browser and review overlay. Firm search, standards, audit-log metadata, actual work-time entry and requirement coverage are available. Review Desk and collaboration remain intact. Phase 4 tax corrections/sign-offs and Phase 7 filing are not built yet.
 
 ## Run locally
 
@@ -22,6 +22,20 @@ Choose **v3 · latest**, then **Tax Return**. Start at `F1040.2b` and follow `Sc
 On **Review Desk**, seven independent checks produce six v3 findings and one passing W-2 control. They cover sweep interest, duplicate mileage pages, card receipts already in the books, payment-year designation, the unextracted M18 lot and the ambiguous donation. The 11 supplied engine diagnostics appear separately. Select an issue and open a source reference to inspect it beside the queue; filter by review state, blocker, tax area or assignee.
 
 Preparer/reviewer/partner identities can save **Open**, **Investigating**, **Waiting**, **Explained**, or **Resolved with evidence** triage, with an active assignee and supporting references. State is shared per engagement and computed version; reviewers must select the same version to see the same triage. Waiting/explanation/resolution needs a reason; resolution needs source evidence. An ambiguous amount cannot be resolved by citing its own uncertain reading. Save conflicts return 409. Native POST forms also work without JavaScript. A saved disposition does not correct the immutable engine return or establish filing readiness.
+
+Open **CPA Records** for prior-year comparison, tax computation, the document index, depreciation, sales, Schedule C, rentals/passive losses, K-1s, retirement/foreign items, deductions/credits, payments/agency reconciliation, California allocation, carryovers, basis by year and prior-preparer treatment. Every area has a representative source trace using the existing resolver and Evidence Inspector. Book-profit reconciliation only compares supplied book and engine totals; it does not calculate a new return. Depreciation shows the actual federal/California/AMT regimes, methods, lives and dispositions. Unknown 2023 stock basis, partnership outside basis and absent related returns remain gaps/stubs.
+
+In **Brokerage & crypto sales**, D74 has **260** trades. Across the packet there are **294 source-backed trades**, a separate computed S-corp distribution entry, and seven category totals: **302 Form 8949 lines** in all. Trade rows follow the actual `R-8949-LOT` source relationships; computed totals are not counted as transactions. Crypto retains the supplied **H/K** category codes. Choose category/exception groups, search a lot/amount, inspect any item and open its original source references. At most **12** detail rows mount at once; search, keyboard scrolling and window controls reach the whole list. Null crypto basis is displayed as unknown; M18 remains an explicit unextracted-page gap.
+
+Select one or all matching lots and save a **bulk review observation** with a reason. Tax staff can persist `reviewed` / `needs_review` overlays with exact source refs and audit history. Revision conflicts reject the whole batch. These observations are not field verification, tax corrections or approval; bulk undo is not implemented. Changes update the staff engagement polling cursor without changing the client cursor.
+
+Use **Search all records** (`/firm/search`) for household/ID/year, exact currency amounts, lines, documents/printed pages, lots, assets, prior records and authorized conversations. M18 can be found on its unextracted printed page without inventing a lot record. Search is engagement-scoped and identifiers are masked for every role before matching or serialization. Results link to actual records; future evidence is withheld. Client identities continue to use only the shared Workflow search.
+
+Choose **Jo Kimura · firm administrator** to open `/firm/admin`: edit variance criteria, policy rules and the required-step checklist; inspect observed issue/note status, supplied budget vs manually logged time, and filtered/paginated audit metadata. Private before/after payloads and note bodies never appear in the access-log response. Core role/privacy/note-gate enforcement is independent of editable policy wording. Other staff can log **their own** actual time at `/firm/time`; only the administrator sees engagement-wide entries/totals. An empty category says no time recorded, not zero effort. Original budget and starting standards stay unchanged in the packet.
+
+**Coverage** (`/coverage`) maps the original three-page brief to working routes/tests, the labeled simulated source renderer, partial capability or explicit limitation. It does not claim all assignment phases or handoff deliverables are complete.
+
+The resolver additionally supports `computed:v3:/carryovers_out/...` (immutable supplied metadata, not re-execution) and `household:/related_returns/...` RFC 6901 pointers. The prior memo’s actual `source_document` link resolves to its supplied source; the six unresolved depreciation provenance labels are still unresolved.
 
 Open **Workflow** as Priya. Expand **Create a question, thread, task or review note**, click **Use real D64 donation question**, then **Create record**. This asks for confirmation of an actually ambiguous source; it does not assert a new tax fact. Switch to Ngozi (`cu-01`) to answer and attach evidence; switch back to Priya to see the dated answer, author and source links. Both supplied taxpayers share client-visible conversations. Internal threads and review notes are excluded from client responses, direct URLs, search, attachments and notification cursors.
 
@@ -76,7 +90,7 @@ npm run test:e2e
 
 Application source, runtime data, database migrations, scripts and tests live in the repository root. The original plans, prompts and assignment PDF remain in the ignored `Miraflores_Codex_Product_Engineering_Bundle/` reference folder.
 
-See the original [data inventory](docs/DATA_INVENTORY.md), [Phase 1 report](docs/PHASE_1_VALIDATION.md), [Phase 2 report](docs/PHASE_2_VALIDATION.md), [Phase 3 report](docs/PHASE_3_VALIDATION.md), [Phase 5 report](docs/PHASE_5_VALIDATION.md), and local [execution playbook](Miraflores_Codex_Product_Engineering_Bundle/docs/Miraflores_03_Codex_Execution_Plan.md). Phase 4 corrections and sign-offs require a separate request.
+See the original [data inventory](docs/DATA_INVENTORY.md), [Phase 1 report](docs/PHASE_1_VALIDATION.md), [Phase 2 report](docs/PHASE_2_VALIDATION.md), [Phase 3 report](docs/PHASE_3_VALIDATION.md), [Phase 5 report](docs/PHASE_5_VALIDATION.md), [Phase 6 report](docs/PHASE_6_VALIDATION.md), and local [execution playbook](Miraflores_Codex_Product_Engineering_Bundle/docs/Miraflores_03_Codex_Execution_Plan.md). Phase 4 corrections and sign-offs require a separate request.
 
 ## Documentation consulted
 
