@@ -1,0 +1,30 @@
+[
+  {
+    "file": "review-before.png",
+    "stage": "before",
+    "origin": "committed baseline artifact",
+    "codeCommit": "f91e5d1",
+    "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "actor": "st-04",
+    "masked": true,
+    "sha256": "2ef5fce941a8265093756f1ae35547313c933b31b26f6ae93dfe4bc17a0d6527"
+  },
+  {
+    "file": "review-after.png",
+    "stage": "after",
+    "origin": "final Chromium production-build run",
+    "codeCommit": "dbb6e153579d067869b36917280dcbdbb00999bd",
+    "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "actor": "st-04",
+    "masked": true,
+    "sha256": "9cb32cf14a05276b683cf8929d0f45b1030010f602500d12f7f2da80b7249c03"
+  }
+]
