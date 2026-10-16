@@ -18,7 +18,8 @@ test('fresh CPA entry identifies a next task, understands the discrepancy and op
   const p=await(await page.request.get(`${api}/preferences`)).json();if(p.selectedVersion!=='v3'){await page.request.post(`${api}/preferences`,{data:{selectedVersion:'v3',expectedRevision:p.revision}});await page.reload();}
   const nav=page.getByRole('navigation',{name:'Engagement',exact:true});await expect(nav.getByRole('link')).toHaveText(['01Review','02Tax Return','03Documents','04Tasks & Approvals','05History']);
   await expect(page.getByLabel('Demo identity')).toBeVisible();await expect(page.locator('.next-review .button')).toHaveText('Review next issue →');
-  for(const selector of ['.secondary-tools','.workpaper-data','.review-filters'])expect(await page.locator(selector).evaluate(el=>(el as HTMLDetailsElement).open)).toBe(false);
+  for(const selector of ['.workpaper-data','.review-filters'])expect(await page.locator(selector).evaluate(el=>(el as HTMLDetailsElement).open)).toBe(false);
+  await expect(page.locator('.secondary-tools > summary')).toHaveCount(0);
   await expect(page.locator('#selected-finding')).toHaveCount(0);await expect(page.getByLabel('How to review')).toBeVisible();
   await expect(page.getByTestId('printed-content')).toHaveCount(0);await expect(page.locator('.finding-certainty')).not.toBeVisible();
   await page.locator('.next-review .button').click();await expect(page.locator('#selected-finding')).toBeVisible();
@@ -28,8 +29,8 @@ test('fresh CPA entry identifies a next task, understands the discrepancy and op
   await expect(page.getByRole('link',{name:'Request information',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Explain',exact:true})).toBeVisible();
   await page.getByRole('link',{name:'View source evidence',exact:true}).click();await expect(page.locator('#evidence-inspector').getByTestId('printed-content')).toBeVisible();
   await page.getByRole('link',{name:'Close evidence and return to issue',exact:true}).click();await expect(page.getByTestId('printed-content')).toHaveCount(0);
-  await page.locator('.secondary-tools > summary').click();for(const name of ['CPA Records','Search all records','My work time'])await expect(page.getByRole('navigation',{name:'More tools',exact:true}).getByRole('link',{name,exact:true})).toBeVisible();
-  await page.getByRole('navigation',{name:'More tools',exact:true}).getByRole('link',{name:'CPA Records',exact:true}).click();await expect(page.getByRole('heading',{name:'Tax areas',exact:true})).toBeVisible();
+  for(const name of ['Filing & Approvals Simulation','CPA Records','Search all records','My work time'])await expect(page.getByRole('navigation',{name:'Workpaper tools',exact:true}).getByRole('link',{name,exact:true})).toBeVisible();
+  await page.getByRole('navigation',{name:'Workpaper tools',exact:true}).getByRole('link',{name:'CPA Records',exact:true}).click();await expect(page.getByRole('heading',{name:'Tax areas',exact:true})).toBeVisible();
 });
 
 test('CPA pages keep assignment coverage and submission materials out of the working interface',async({page})=>{
@@ -42,6 +43,21 @@ test('CPA pages keep assignment coverage and submission materials out of the wor
     await expect(page.getByLabel('Demo identity')).toBeVisible();
   }
   await page.goto(`${base}/review`);await expect(page.locator('.next-review .button')).toBeVisible();
+});
+
+test('filing and approvals are directly reachable with a keyboard without opening a tools menu',async({page})=>{
+  for(const id of ['st-01','st-02','st-03','st-05']){
+    await enter(page,id);await page.goto(`${base}/review`);
+    const filing=page.getByRole('navigation',{name:'Workpaper tools',exact:true}).getByRole('link',{name:'Filing & Approvals Simulation',exact:true});
+    await expect(filing).toBeVisible();await expect(page.locator('.secondary-tools > summary')).toHaveCount(0);
+    await tabTo(page,filing);await page.keyboard.press('Enter');await expect(page).toHaveURL(`${base}/workflow#filing-approvals`);
+    const panel=page.getByRole('region',{name:'Simulated filing & amendments',exact:true});await expect(panel).toBeInViewport();await expect(panel).toContainText('Every status here is simulated.');
+    const heading=await panel.getByRole('heading',{name:'Simulated filing & amendments',exact:true}).boundingBox();
+    const topbar=await page.locator('.topbar').boundingBox();expect(heading!.y).toBeGreaterThanOrEqual(topbar!.y+topbar!.height);
+    await expect(page.getByRole('button',{name:'Create filing simulation',exact:true})).toHaveCount(id==='st-01'?1:0);
+  }
+  await enter(page,'cu-01');await page.goto(`${base}/workflow`);await expect(page.getByRole('navigation',{name:'Workpaper tools',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('region',{name:'Simulated filing & amendments',exact:true})).toBeVisible();
 });
 
 test('Explain and Assign persist; a requested client question is saved only after explicit creation',async({page,browser})=>{
@@ -70,7 +86,7 @@ test('Explain and Assign persist; a requested client question is saved only afte
 test('role-specific actions and protected data remain enforced after simplification',async({page})=>{
   for(const id of ['st-01','st-02','st-03']){await enter(page,id);await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('form',{name:'Issue triage'})).toBeVisible();await expect(page.getByLabel('Demo identity')).toHaveValue(id);}
   await enter(page,'st-05');await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('form',{name:'Issue triage'})).toHaveCount(0);await expect(page.getByRole('link',{name:'Request information',exact:true})).toHaveCount(0);await expect(page.getByText('You have read-only access to tax review.',{exact:false})).toBeVisible();
-  await page.locator('.secondary-tools > summary').click();await expect(page.getByRole('link',{name:'Firm administration',exact:true})).toBeVisible();expect((await page.request.post(`${api}/issues/CA_PAYMENT_YEAR%3AD68`,{data:{}})).status()).toBe(403);
+  await expect(page.getByRole('link',{name:'Firm administration',exact:true})).toBeVisible();expect((await page.request.post(`${api}/issues/CA_PAYMENT_YEAR%3AD68`,{data:{}})).status()).toBe(403);
   await enter(page,'cu-01');await page.goto(`${base}/workflow?request=CHARITY_AMOUNT_UNCLEAR%3AD64`);await expect(page.locator('.question-draft-context')).toHaveCount(0);await expect(page.getByRole('heading',{name:'Questions, tasks & approvals',exact:true})).toBeVisible();expect((await page.request.get(`${api}/issues`)).status()).toBe(403);
   await page.goto(`${base}/review`);await expect(page.getByRole('heading',{name:'Staff workspace',exact:true})).toBeVisible();await expect(page.locator('#finding-title')).toHaveCount(0);
   await enter(page);await page.goto(`${base}/review?issue=CA_PAYMENT_YEAR%3AD68`);await expect(page.getByRole('button',{name:'Record correction',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Submit for review',exact:true})).toHaveCount(0);await expect(page.locator('.unavailable-actions')).toContainText('Not available:');

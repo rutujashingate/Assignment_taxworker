@@ -29,7 +29,18 @@ export function AppShell({ children, actor, identities, engagement }: {
           {destinations.map(([route, label, number]) => <Link prefetch={false} key={route} href={`${base}/${route}`} className={`nav-link ${path === `${base}/${route}` || path.startsWith(`${base}/${route}/`) ? "active" : ""}`} aria-current={path === `${base}/${route}` || path.startsWith(`${base}/${route}/`) ? "page" : undefined}><span className="nav-number" aria-hidden="true">{number}</span>{label}</Link>)}
         </nav>
       </>}
-      {actor && actor.role !== "client" && <details className="secondary-tools" open={path.startsWith(`${base}/records`) || ["/firm/search","/firm/time","/firm/admin"].includes(path)}><summary>More tools</summary><nav className="firm-tools" aria-label="More tools">{engagement && <Link prefetch={false} className={`nav-link ${path.startsWith(`${base}/records`)?"active":""}`} href={`${base}/records`}>CPA Records</Link>}<Link prefetch={false} className="nav-link" href="/firm/search">Search all records</Link><Link prefetch={false} className="nav-link" href="/firm/time">My work time</Link>{actor.role === "firm_administrator" && <Link prefetch={false} className="nav-link" href="/firm/admin">Firm administration</Link>}</nav></details>}
+      {actor && actor.role !== "client" && <div className="secondary-tools">
+        <div className="nav-caption">WORKPAPER TOOLS</div>
+        <nav className="firm-tools" aria-label="Workpaper tools">
+          {engagement && <>
+            <Link prefetch={false} className="nav-link filing-shortcut" href={`${base}/workflow#filing-approvals`}>Filing & Approvals <span className="navigation-hint">Simulation</span></Link>
+            <Link prefetch={false} className={`nav-link ${path.startsWith(`${base}/records`) ? "active" : ""}`} aria-current={path.startsWith(`${base}/records`) ? "page" : undefined} href={`${base}/records`}>CPA Records</Link>
+          </>}
+          <Link prefetch={false} className={`nav-link ${path === "/firm/search" ? "active" : ""}`} aria-current={path === "/firm/search" ? "page" : undefined} href="/firm/search">Search all records</Link>
+          <Link prefetch={false} className={`nav-link ${path === "/firm/time" ? "active" : ""}`} aria-current={path === "/firm/time" ? "page" : undefined} href="/firm/time">My work time</Link>
+          {actor.role === "firm_administrator" && <Link prefetch={false} className={`nav-link ${path === "/firm/admin" ? "active" : ""}`} aria-current={path === "/firm/admin" ? "page" : undefined} href="/firm/admin">Firm administration</Link>}
+        </nav>
+      </div>}
       <div className="sidebar-foot"><span className="small-dot"/> Original source preserved<p>Human review. Clear evidence.<br/>A record you can return to.</p></div>
     </aside>
     <div className="workspace">
