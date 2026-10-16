@@ -8,7 +8,7 @@
         "width": 1440,
         "height": 1050
       },
-      "sha256": "3e2300cbe0e7593db1fcaab87ddb5f775387209059fae9e5aedccb1cb8c102be",
+      "sha256": "bdd112c6fd59f34a39614af4a02912f81c9b764e32cafe85114f26fae632c9fc",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
@@ -21,7 +21,7 @@
         "width": 1440,
         "height": 1050
       },
-      "sha256": "2ef5fce941a8265093756f1ae35547313c933b31b26f6ae93dfe4bc17a0d6527",
+      "sha256": "9cb32cf14a05276b683cf8929d0f45b1030010f602500d12f7f2da80b7249c03",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
@@ -47,7 +47,7 @@
         "width": 390,
         "height": 844
       },
-      "sha256": "2ad99ab0f48851d5d0a478f33031767676481f4e59f6c31d9a49a9333843b685",
+      "sha256": "c32f6323fa0859761f81c9ac991fef52707de8f6b5dafe44fe65f31422cf3cfe",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",

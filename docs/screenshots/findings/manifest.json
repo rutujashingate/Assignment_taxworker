@@ -6,7 +6,7 @@
     "sourceRef": "doc:D31#page32",
     "sourcePage": "doc:D31#page32",
     "screenshot": "screenshots/findings/BROKER_PAGE_UNEXTRACTED.png",
-    "sha256": "ff80f9aebb6d4cc17980b943be947926ea04b256b93c6bd4f5009799c0433a66",
+    "sha256": "202bca12425038ab2b9c08decebb67a66652345e592f7ab94441c998a7a95181",
     "masked": true
   },
   {
@@ -16,7 +16,7 @@
     "sourceRef": "ev-1076",
     "sourcePage": "doc:D68#page1",
     "screenshot": "screenshots/findings/CA_PAYMENT_YEAR.png",
-    "sha256": "ed097b4b7246be8ec3b2899dc005b43945bbad5f5df8617f6a5433598514078a",
+    "sha256": "af436d634f14477053e7c50d8dcaec184c271ba64c7aa9f68f5b7c2764e46795",
     "masked": true
   },
   {
@@ -26,7 +26,7 @@
     "sourceRef": "doc:D15#page3",
     "sourcePage": "doc:D15#page3",
     "screenshot": "screenshots/findings/CARD_RECEIPTS_OVERLAP.png",
-    "sha256": "89b641a2e8abf1c9a6778633367766d78feb6d7c69dcecd40b61f55dca166bb6",
+    "sha256": "f37892d8235f7a7409eaaeb4e06076906a64baa983aa605b0206a2b4320b6c06",
     "masked": true
   },
   {
@@ -36,7 +36,7 @@
     "sourceRef": "ev-1049",
     "sourcePage": "doc:D64#page1",
     "screenshot": "screenshots/findings/CHARITY_AMOUNT_UNCLEAR.png",
-    "sha256": "a0bf2bb783c7bb34aebe062f608ccd9f8d4225e47e43cfdd285749ad624a5168",
+    "sha256": "5386bb2c8b94f4a151fa24847173f7235ba562eadbb7cd512c644fb6181f382d",
     "masked": true
   },
   {
@@ -46,7 +46,7 @@
     "sourceRef": "ev-0492",
     "sourcePage": "doc:D28#page1",
     "screenshot": "screenshots/findings/INTEREST_SWEEP_OVERLAP.png",
-    "sha256": "3c44c8bb6e1428481198d3c815b000637285f0cd75018c08cbf8081a45767e86",
+    "sha256": "ef687b8898e52061e6e50c3197523590b4ff498b2a81ec43167759b1a4f44918",
     "masked": true
   },
   {
@@ -56,17 +56,17 @@
     "sourceRef": "doc:D23#page2",
     "sourcePage": "doc:D23#page2",
     "screenshot": "screenshots/findings/MILEAGE_DUPLICATE_PAGES.png",
-    "sha256": "aaef2a611b095057dfc61dc1ab0ab4b9cc19d2d8162e189f58653b2c5ff8d57d",
+    "sha256": "af267a807ab07790fb7b422b702314e02dcb11104caf1a647b95b9d918870587",
     "masked": true
   },
   {
     "code": "W2_CONTRIBUTION_COUNT",
     "outcome": "pass",
-    "route": "/engagements/CL-20417/2025/return?line=F1040.1a&ref=ev-0035",
+    "route": "/engagements/CL-20417/2025/return?q=&form=all&page=1&line=F1040.1a&ref=ev-0035",
     "sourceRef": "ev-0035",
     "sourcePage": "doc:D09#page1",
     "screenshot": "screenshots/findings/W2_CONTRIBUTION_COUNT.png",
-    "sha256": "3a8a5cb6bc2fc5b55296c7b2c7351cfb54fba444d6bb3ccb478be875912df774",
+    "sha256": "d5c2c1795bc901b2bc7451cbafa4745d5d1ec5359c2d42ccac4960f024cf5897",
     "masked": true
   }
 ]
