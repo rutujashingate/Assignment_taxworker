@@ -208,3 +208,21 @@ Each implementation batch contains three files including its relevant browser te
 | `a4f7d17` | Requested source before extraction metadata | Sixteen source/collaboration browser cases; lint/build |
 | `08dd80f` | Selected-field focus and honest page fallback | Seventeen source/tracing browser cases; lint/build |
 | `dbb6e15` | Document field opens return-usage section directly | Three focused forward/reverse cases, including real keyboard navigation; lint/build |
+
+
+## Navigation cleanup follow-up — October 16, 2026
+
+Assignment research, requirements coverage and submission materials are no longer linked from the working interface. The sidebar and Tax areas exclude `/coverage` and `/handoff`; repository documents remain the submission record. Legacy authenticated URLs are preserved for earlier links and existing route compatibility. Actual CPA review checks, missing-evidence warnings and simulated filing disclosures remain visible where needed.
+
+Workpaper tools now appear without expanding a menu: Filing & Approvals (Simulation), CPA Records, search, time and administrator-only firm administration. The filing shortcut reaches the existing Tasks & Approvals filing section by a keyboard-accessible fragment link and respects existing server permissions. Client identities retain their restricted workspace. Phones show compact scrolling navigation rows; the next review action remains in the initial tested viewport. No original JSON, tax calculation, validation rule, schema, API contract, permission or historical audit event changed. The 80-item assessment and its remaining feature gaps above are unchanged.
+
+Changed implementation files: `src/components/app-shell.tsx`, `src/components/filing-panel.tsx`, `src/app/globals.css`, the Tax areas and Review page components, and `tests/e2e/ux-review.spec.ts`. README, AI disclosure and actual masked screenshot artifacts were refreshed. The fresh-session test now waits for the signed-in firm landing page and workpaper URL; its initial run exposed a redirect race in the test before those waits were added.
+
+Actual follow-up verification:
+
+- `npm run test:canonical`: **133 passed / 14 files**, 26.87 seconds, real isolated PostgreSQL and separately verified original packet bytes; local packet unchanged.
+- `npm run test:e2e`: **59 passed**, 4.0 minutes; includes absence of assignment links across seven working pages, direct keyboard filing navigation for preparer/reviewer/partner/admin, role restrictions, persistence, source tracing and five responsive sizes.
+- `npm run lint`, `npm run typecheck`, `npm run build`, `npm run findings:check`, `npm run audit:check` and `git diff --check`: passed. The production build and lint were rerun after the final administrator wording change; `npm run test:e2e -- tests/e2e/ux-review.spec.ts --grep 'role-specific'` then passed **1 test** against that final build.
+- All **19** screenshot hashes verified. The five current UX captures and seven findings captures were refreshed by the production-build browser run; the tracing review-after image uses that same real capture. Historical before images and older source-trace captures are unchanged.
+
+[Current desktop](screenshots/ux/after-review-desktop.png) · [Current phone](screenshots/ux/after-review-mobile.png) · [Earlier desktop baseline](screenshots/ux/before-review-desktop.png). Screenshots use masked staff identity st-04 and source clock June 23, 2026. Agent visual inspection is not independent CPA certification. GitHub pushes were authorized; no deployment or recording was performed.

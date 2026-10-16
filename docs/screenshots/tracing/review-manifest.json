@@ -16,8 +16,8 @@
   {
     "file": "review-after.png",
     "stage": "after",
-    "origin": "final Chromium production-build run",
-    "codeCommit": "dbb6e153579d067869b36917280dcbdbb00999bd",
+    "origin": "Chromium production-build run after navigation cleanup",
+    "codeCommit": "c71296a",
     "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding",
     "viewport": {
       "width": 1440,
@@ -25,6 +25,6 @@
     },
     "actor": "st-04",
     "masked": true,
-    "sha256": "9cb32cf14a05276b683cf8929d0f45b1030010f602500d12f7f2da80b7249c03"
+    "sha256": "a44154f03f3d7624dfe2665a876d3e8947b1886eabe1e0a22be8e737d9492792"
   }
 ]

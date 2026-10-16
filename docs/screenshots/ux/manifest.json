@@ -1,5 +1,5 @@
 {
-  "capture": "Real Chromium UI; isolated test database; uncommitted working tree",
+  "capture": "Real Chromium UI; production build; isolated test database; navigation source commit c71296a",
   "images": [
     {
       "file": "after-evidence-desktop.png",
@@ -8,11 +8,12 @@
         "width": 1440,
         "height": 1050
       },
-      "sha256": "bdd112c6fd59f34a39614af4a02912f81c9b764e32cafe85114f26fae632c9fc",
+      "sha256": "810395c9cc90fa2aa23900353ea054ecc1bad092f8363e21a1e6f3b344086a36",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
-      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68&ref=ev-1076#evidence-inspector"
+      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68&ref=ev-1076#evidence-inspector",
+      "codeCommit": "c71296a"
     },
     {
       "file": "after-issue-desktop.png",
@@ -21,11 +22,12 @@
         "width": 1440,
         "height": 1050
       },
-      "sha256": "9cb32cf14a05276b683cf8929d0f45b1030010f602500d12f7f2da80b7249c03",
+      "sha256": "a44154f03f3d7624dfe2665a876d3e8947b1886eabe1e0a22be8e737d9492792",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
-      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding"
+      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding",
+      "codeCommit": "c71296a"
     },
     {
       "file": "after-review-desktop.png",
@@ -34,11 +36,12 @@
         "width": 1440,
         "height": 1050
       },
-      "sha256": "86cff89ea16f81af5ff47e5b3678b17246e715944ebabffede9a3ad4348ec4e2",
+      "sha256": "ac38b6c1a968734b8dcf57299f66a27ee8bead755777589a74ac64d4a18c08af",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
-      "route": "/engagements/CL-20417/2025/review"
+      "route": "/engagements/CL-20417/2025/review",
+      "codeCommit": "c71296a"
     },
     {
       "file": "after-review-mobile.png",
@@ -47,11 +50,12 @@
         "width": 390,
         "height": 844
       },
-      "sha256": "c32f6323fa0859761f81c9ac991fef52707de8f6b5dafe44fe65f31422cf3cfe",
+      "sha256": "a1af4d3b9274e2e4d9e44baf2fed5ee3e84b54776fe51bcffbcc8bc5fe7ee5b1",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
-      "route": "/engagements/CL-20417/2025/review"
+      "route": "/engagements/CL-20417/2025/review",
+      "codeCommit": "c71296a"
     },
     {
       "file": "after-review-tablet.png",
@@ -60,11 +64,12 @@
         "width": 1024,
         "height": 900
       },
-      "sha256": "b0e436b5739dc92b72f8986e3802ea71bfb3db74075903a15a865c52f0d0f389",
+      "sha256": "11c3705a50ab15ddb0d1edb644033ac224aa70e69859365eb7613d7ba50cc09c",
       "actor": "st-04",
       "masked": true,
       "sourceAsOf": "2026-06-23T06:05:00Z",
-      "route": "/engagements/CL-20417/2025/review"
+      "route": "/engagements/CL-20417/2025/review",
+      "codeCommit": "c71296a"
     },
     {
       "file": "before-issue-desktop.png",
