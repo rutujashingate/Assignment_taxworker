@@ -13,7 +13,8 @@ test.afterEach(async({page})=>{await clock(page);});
 
 test('fresh CPA entry identifies a next task, understands the discrepancy and opens evidence only on demand',async({page})=>{
   await page.context().clearCookies();await page.setViewportSize({width:1440,height:1050});await page.goto('/firm');
-  await page.getByRole('button',{name:'Open workspace',exact:true}).click();await page.getByRole('link',{name:'Open workpaper',exact:true}).click();
+  await page.getByRole('button',{name:'Open workspace',exact:true}).click();await expect(page.getByRole('heading',{name:'Engagements',exact:true})).toBeVisible();
+  await page.getByRole('link',{name:'Open workpaper',exact:true}).click();await expect(page).toHaveURL(`${base}/review`);
   const p=await(await page.request.get(`${api}/preferences`)).json();if(p.selectedVersion!=='v3'){await page.request.post(`${api}/preferences`,{data:{selectedVersion:'v3',expectedRevision:p.revision}});await page.reload();}
   const nav=page.getByRole('navigation',{name:'Engagement',exact:true});await expect(nav.getByRole('link')).toHaveText(['01Review','02Tax Return','03Documents','04Tasks & Approvals','05History']);
   await expect(page.getByLabel('Demo identity')).toBeVisible();await expect(page.locator('.next-review .button')).toHaveText('Review next issue →');
@@ -27,8 +28,20 @@ test('fresh CPA entry identifies a next task, understands the discrepancy and op
   await expect(page.getByRole('link',{name:'Request information',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Explain',exact:true})).toBeVisible();
   await page.getByRole('link',{name:'View source evidence',exact:true}).click();await expect(page.locator('#evidence-inspector').getByTestId('printed-content')).toBeVisible();
   await page.getByRole('link',{name:'Close evidence and return to issue',exact:true}).click();await expect(page.getByTestId('printed-content')).toHaveCount(0);
-  await page.locator('.secondary-tools > summary').click();for(const name of ['CPA Records','Search all records','My work time','Coverage','Submission & audit'])await expect(page.getByRole('navigation',{name:'More tools',exact:true}).getByRole('link',{name,exact:true})).toBeVisible();
+  await page.locator('.secondary-tools > summary').click();for(const name of ['CPA Records','Search all records','My work time'])await expect(page.getByRole('navigation',{name:'More tools',exact:true}).getByRole('link',{name,exact:true})).toBeVisible();
   await page.getByRole('navigation',{name:'More tools',exact:true}).getByRole('link',{name:'CPA Records',exact:true}).click();await expect(page.getByRole('heading',{name:'Tax areas',exact:true})).toBeVisible();
+});
+
+test('CPA pages keep assignment coverage and submission materials out of the working interface',async({page})=>{
+  await enter(page);
+  for(const route of ['/firm',`${base}/review`,`${base}/return`,`${base}/documents`,`${base}/workflow`,`${base}/history`,`${base}/records`]){
+    await page.goto(route);
+    await expect(page.locator('a[href="/coverage"],a[href="/handoff"],a[href^="/api/handoff/"]')).toHaveCount(0);
+    await expect(page.getByRole('link',{name:'Submission & audit',exact:true})).toHaveCount(0);
+    await expect(page.getByRole('link',{name:'Requirement coverage',exact:true})).toHaveCount(0);
+    await expect(page.getByLabel('Demo identity')).toBeVisible();
+  }
+  await page.goto(`${base}/review`);await expect(page.locator('.next-review .button')).toBeVisible();
 });
 
 test('Explain and Assign persist; a requested client question is saved only after explicit creation',async({page,browser})=>{
