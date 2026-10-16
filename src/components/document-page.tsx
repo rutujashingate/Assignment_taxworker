@@ -25,7 +25,7 @@ export function DocumentPage({ document, selectedField, fieldHref, masked, compa
   for (const { value, location } of located) {
     if (location.status !== "matched") continue;
     fragments.push(document.page.printed_content.slice(offset, location.start));
-    const field = <Link prefetch={false} href={fieldHref(value.id)} aria-label={`Inspect ${value.id} · ${String(value.label ?? value.field)}`} data-testid={`printed-field-${value.id}`}>{location.text}</Link>;
+    const field = <Link prefetch={false} href={fieldHref(value.id)} aria-label={`Inspect ${value.id} · ${String(value.label ?? value.field)}`} title="Inspect this field and see where it is used in the return" data-testid={`printed-field-${value.id}`}>{location.text}</Link>;
     fragments.push(selectedField === value.id ? <mark key={value.id} className="printed-selection">{field}</mark> : <span key={value.id} className="printed-field">{field}</span>);
     offset = location.end;
   }
@@ -33,7 +33,7 @@ export function DocumentPage({ document, selectedField, fieldHref, masked, compa
   const contents = <>
     <header className="source-paper-heading"><span>{document.id} · PAGE {document.page.page}</span><h3>{document.title}</h3><p>{document.issuer} · Tax year {document.taxYear}</p></header>
     <div className="printed-content" data-testid="printed-content">{fragments}</div>
-    <p className="source-caption">Printed content from the supplied packet{masked ? "; sensitive identifiers masked" : ""}. Click an underlined printed field to inspect its usage.</p>
+    <p className="source-caption">Printed content from the supplied packet{masked ? "; sensitive identifiers masked" : ""}. Select a linked field to see where it is used in the return.</p>
   </>;
   return <section className="document-renderer" aria-label={`${document.id} page ${document.page.page}`}>
     <div className="source-disclaimer"><strong>Simulated source document</strong><span>Rendered from packet text. No original page image or PDF coordinates are available. Synthetic positions are not used.</span></div>
