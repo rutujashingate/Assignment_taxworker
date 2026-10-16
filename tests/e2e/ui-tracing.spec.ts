@@ -99,3 +99,10 @@ test('E01 E02 E08: keyboard-only wage number to D09 and back through tax usage',
   const usage=page.getByRole('region',{name:'Tax line usage',exact:true}).getByRole('link',{name:'Open return line F1040.1a',exact:true});await tabTo(page,usage);await expect(usage).toContainText('212,400');await page.keyboard.press('Enter');
   await expect(inspector.locator('.inspector-amount')).toHaveText('$212,400');
 });
+
+test('requested source text appears before extraction metadata and duplicate field grids stay collapsed',async({page})=>{
+  await enter(page,'st-04');await page.goto(`${base}/return?ref=ev-0016&line=F1040.1a`);
+  const inspector=page.locator('#evidence-inspector');
+  expect(await inspector.locator('.inspector-source').evaluate(el=>Boolean(el.compareDocumentPosition(document.querySelector('.extraction-reading')!)&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await expect(inspector.locator('.source-readings')).not.toHaveAttribute('open');await expect(inspector.getByTestId('printed-field-ev-0016')).toContainText('104,600.00');
+});

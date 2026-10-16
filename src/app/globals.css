@@ -84,3 +84,5 @@ a:active{background-color:#d5e4c8}
 /* Contain absolutely positioned table labels inside the horizontal scroller. */
 .table-scroll{position:relative}
 @media(max-width:390px){.main-content{padding-top:12px}.demo-strip{padding-block:6px}.review-heading{gap:8px}.next-review{padding:10px;gap:6px}.workpaper-data>summary{min-height:32px;padding-block:6px}}
+/* A requested source leads with the document; reading metadata follows it. */
+.evidence-inspector:has(.inspector-source) .inspector-heading{padding:16px 20px}.evidence-inspector:has(.inspector-source) .inspector-heading .eyebrow{display:none}.evidence-inspector:has(.inspector-source) .inspector-heading h2{font-size:18px}.evidence-inspector:has(.inspector-source) .inspector-ref{margin-top:8px}.inspector-source .source-paper-heading h3{font-size:17px;margin-top:7px}.inspector-source .source-paper-heading p{margin-bottom:14px}.inspector-source .source-template-label{margin-bottom:14px}
