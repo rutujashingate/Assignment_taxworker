@@ -1,0 +1,38 @@
+[
+  {
+    "file": "desktop-number-source.png",
+    "origin": "final Chromium production-build run",
+    "codeCommit": "dbb6e153579d067869b36917280dcbdbb00999bd",
+    "route": "/engagements/CL-20417/2025/return?q=F1040.1a&form=all&page=1&line=F1040.1a&ref=ev-0016#evidence-inspector",
+    "viewport": {
+      "width": 1440,
+      "height": 960
+    },
+    "actor": "st-04",
+    "masked": true,
+    "sourceAsOf": "2026-06-23T06:05:00Z",
+    "selectedRef": "ev-0016",
+    "document": "D08",
+    "page": 1,
+    "fieldFocused": true,
+    "sha256": "da6562ac1db7a5a2f09b8772b7b92fc9a1d1c2b694ddf6d54edc3c03b5bfd896"
+  },
+  {
+    "file": "phone-number-source.png",
+    "origin": "final Chromium production-build run",
+    "codeCommit": "dbb6e153579d067869b36917280dcbdbb00999bd",
+    "route": "/engagements/CL-20417/2025/return?q=F1040.1a&form=all&page=1&line=F1040.1a&ref=ev-0016#evidence-inspector",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "actor": "st-04",
+    "masked": true,
+    "sourceAsOf": "2026-06-23T06:05:00Z",
+    "selectedRef": "ev-0016",
+    "document": "D08",
+    "page": 1,
+    "fieldFocused": true,
+    "sha256": "5aa0db53060bcdbf05bcced744a26ec3b5576d29b4939a2ec6048e1c66f60f68"
+  }
+]
