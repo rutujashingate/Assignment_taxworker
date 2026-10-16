@@ -43,10 +43,17 @@ test('browser authorization, rejection, correction, frozen acceptance, amendment
   await draft.getByRole('checkbox').check();await draft.getByRole('button',{name:'Save simulation assumptions',exact:true}).click();await expect.poll(async()=>(await filing(page,id)).model.simulationAcknowledged).toBe(true);
   await approval(page,id);await enter(page,'st-01');await page.goto(`${base}/history`);await card(page,id).getByRole('button',{name:'Submit simulation',exact:true}).click();await expect(card(page,id).locator('.status-label')).toContainText('submitted');
   await clock(page,'tl-21');await enter(page,'st-01');await page.goto(`${base}/history`);await card(page,id).getByRole('button',{name:'Replay next scripted agency response',exact:true}).click();await expect(card(page,id).locator('.status-label')).toContainText('rejected');await expect(card(page,id).locator('.filing-acknowledgments')).toContainText('R0000-504-02');await expect(card(page,id).locator('.filing-acknowledgments')).toContainText('STATE-HOLD');
-  await card(page,id).getByRole('button',{name:'Link D71 dependent-ID correction',exact:true}).click();await expect(page.locator('p[role=alert]')).toContainText('has not arrived');
+  await expect(card(page,id).getByRole('button',{name:'Link D71 dependent-ID correction',exact:true})).toBeDisabled();await expect(card(page,id)).toContainText('D71 is not available');
   await clock(page,'tl-22');await enter(page,'st-01');await page.goto(`${base}/history`);await card(page,id).getByRole('button',{name:'Link D71 dependent-ID correction',exact:true}).click();await expect(card(page,id).locator('.status-label')).toContainText('draft');
   await approval(page,id);await enter(page,'st-01');await page.goto(`${base}/history`);await card(page,id).getByRole('button',{name:'Submit simulation',exact:true}).click();await expect(card(page,id).locator('.status-label')).toContainText('submitted');
-  for(const event of ['tl-23','tl-24']){await clock(page,event);await enter(page,'st-01');await page.goto(`${base}/history`);await card(page,id).getByRole('button',{name:'Replay next scripted agency response',exact:true}).click();await expect.poll(async()=>(await filing(page,id)).status).toBe(event==='tl-23'?'federal_accepted':'accepted');}
+  for(const event of ['tl-23','tl-24']){
+    await clock(page,event);await enter(page,'st-01');await page.goto(`${base}/history`);
+    const expected=event==='tl-23'?'federal_accepted':'accepted';
+    const response=page.waitForResponse(r=>r.url().endsWith('/season')&&r.request().method()==='POST'&&r.request().postDataJSON().action==='response');
+    await card(page,id).getByRole('button',{name:'Replay next scripted agency response',exact:true}).click();
+    const saved=await response;expect(saved.status()).toBe(200);expect((await saved.json()).status).toBe(expected);
+    await expect.poll(async()=>(await filing(page,id)).status,{timeout:15000}).toBe(expected);
+  }
   await page.reload();await expect(card(page,id)).toContainText('frozen on the server');const accepted=await filing(page,id);
   expect((await page.request.post(`${api}/season`,{data:{action:'submit',id,expectedRevision:accepted.revision}})).status()).toBe(409);
   await card(page,id).getByRole('button',{name:'Create amendment branch',exact:true}).click();await expect.poll(async()=>{const d=await(await page.request.get(`${api}/filings`)).json();return d.filings.filter((f:{parentId:string})=>f.parentId===id).length;}).toBe(1);

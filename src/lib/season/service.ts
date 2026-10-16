@@ -102,13 +102,15 @@ export async function getFilings(actor:Actor,clientId:string,taxYear:number) {
   try {
     await tx.query('BEGIN');
     const rows=(await tx.query<FilingRow>(`SELECT f.* FROM filing_simulation f WHERE client_id=$1 AND tax_year=$2 AND ${filingSourceDateSql}<=$3::timestamptz ORDER BY created_at,id`,[clientId,taxYear,clock.asOf])).rows;
+    const availableEfile=availableAgencyRecords(packet.tax_agency_records,new Map(packet.documents.map(d=>[d.id,d.received_at])),clock.asOf).efile as {jurisdiction:string;status:string}[];
     const filings=[];
     for(const row of rows) {
       const gate=await readiness(tx,row,packet,clock.asOf);
       if(actor.role==='client'){filings.push(clientView(row,gate,packet));continue;}
       const events=(await tx.query('SELECT action,record,created_at FROM filing_simulation_event WHERE filing_id=$1 ORDER BY id',[row.id])).rows.map(e=>({action:e.action,record:e.record,createdAt:e.created_at.toISOString()}));
       const parent=row.parent_id?rows.find(r=>r.id===row.parent_id):null;
-      filings.push({...clientView(row,gate,packet),model:row.model,attestations:row.attestations,correction:row.correction,readiness:gate,
+      filings.push({...clientView(row,gate,packet),model:row.model,attestations:row.attestations,correction:row.correction,readiness:gate,createdBy:row.created_by,
+        nextResponseAvailable:!row.parent_id&&availableEfile.some(e=>row.status==='federal_accepted'?e.jurisdiction==='california'&&e.status==='accepted':row.correction?e.jurisdiction==='federal'&&e.status==='accepted':e.jurisdiction==='federal'&&e.status==='rejected'),
         snapshot:row.snapshot,events,amendmentDiff:parent?{parentHash:parent.snapshot_hash,before:parent.model.adjustments,after:row.model.adjustments,
           lines:[...new Set([...parent.model.adjustments,...row.model.adjustments].map(a=>a.line))].flatMap(key=>{
             const oldDelta=parent.model.adjustments.find(a=>a.line===key)?.delta??0,newDelta=row.model.adjustments.find(a=>a.line===key)?.delta??0;
@@ -119,6 +121,8 @@ export async function getFilings(actor:Actor,clientId:string,taxYear:number) {
     }
     await tx.query('COMMIT');
     return redact({clock,filings,client:actor.role==='client',actorId:actor.id,role:actor.role,canCorrectIdentity:actor.sensitiveDataClearance&&taxRoles.includes(actor.role),
+      canCreate:['preparer','quality_reviewer'].includes(actor.role)&&isAvailable(packet.return_versions[2].computed_at,clock.asOf),
+      identityCorrectionAvailable:packet.documents.some(d=>d.id==='D71'&&isAvailable(d.received_at,clock.asOf)),
       approvalAvailable:isAvailable(String(packet.client.messages.find(m=>m.id==='msg-09')?.sent_at),clock.asOf),
       noticeAvailable:packet.documents.some(d=>d.id==='D72'&&isAvailable(d.received_at,clock.asOf)),
       warning:'Internal simulation only. Phase 4 corrections and production sign-offs are unavailable. Exceptions do not resolve Review Desk findings.'});
@@ -151,6 +155,7 @@ export async function seasonCommand(actor:Actor,clientId:string,taxYear:number,i
     }
     if(!isAvailable(packet.return_versions[2].computed_at,asOf))throw new HttpError(409,'Filing simulations require the supplied v3 return.');
     if(c.action==='create') {
+      if(!['preparer','quality_reviewer'].includes(actor.role))throw new HttpError(403,'A preparer creates the simulation; the separate reviewer and partner supply approvals.');
       let inheritedCorrection:FilingRow['correction']=null;
       let model:FilingModel={adjustments:[],exceptions:[],simulationAcknowledged:false};
       if(c.parentId) {
@@ -228,10 +233,10 @@ export async function seasonCommand(actor:Actor,clientId:string,taxYear:number,i
       if(row.parent_id)throw new HttpError(409,'No amended-return acknowledgments are supplied; this amendment remains an isolated simulation.');
       if(!['submitted','federal_accepted'].includes(row.status))throw new HttpError(409,'Submit a simulation before replaying agency responses.');
       if(!row.snapshot||digest(row.snapshot)!==row.snapshot_hash)throw new HttpError(409,'Snapshot integrity validation failed.');
-      // Federal acceptance has already frozen the authorized proposal. Later CA
-      // acknowledgment attaches to that exact snapshot, not a newly edited view.
-      if(row.status==='submitted'&&!gate.ready)throw new HttpError(409,'Current simulation approvals and unblocked review notes are required before processing a response.');
-      if(row.status==='federal_accepted'&&gate.blockers.some(b=>b.includes('open blocking review note')))throw new HttpError(409,'Open blocking review notes prevent processing acceptance.');
+      // Submission already validated current approvals and captured their exact
+      // proposal. A later source arrival cannot replace that submitted payload
+      // or strand a rejection acknowledgment. New acceptance still honors notes.
+      if((row.status==='federal_accepted'||row.correction)&&gate.blockers.some(b=>b.includes('open blocking review note')))throw new HttpError(409,'Open blocking review notes prevent processing acceptance.');
       const agency=availableAgencyRecords(packet.tax_agency_records,new Map(packet.documents.map(d=>[d.id,d.received_at])),asOf);
       const efile=agency.efile as {date:string;status:string;jurisdiction:string;errors?:unknown[]}[];
       if(row.status==='submitted'&&!row.correction) {

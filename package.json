@@ -7,14 +7,20 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "start": "next start --hostname 127.0.0.1",
+    "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:import": "tsx scripts/import-packet.ts",
-    "validate:packet": "python3 scripts/validate_packet.py"
+    "validate:packet": "python3 scripts/validate_packet.py",
+    "findings:generate": "tsx scripts/generate-findings.ts",
+    "findings:check": "tsx scripts/generate-findings.ts --check --canonical",
+    "test:canonical": "tsx scripts/test-canonical.ts",
+    "audit:generate": "tsx scripts/generate-requirements-audit.ts",
+    "audit:check": "tsx scripts/generate-requirements-audit.ts --check",
+    "validate:canonical": "tsx scripts/test-canonical.ts --validate-only"
   },
   "dependencies": {
     "next": "16.4.2",

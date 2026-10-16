@@ -98,6 +98,14 @@ test('model edits invalidate approval, new available evidence stales approval, a
     await approvals(id);await move('tl-22');await expect(act(id,'submit')).rejects.toMatchObject({status:409});
   }finally{await move('default');}
 });
+test('later workpaper activity cannot strand a submitted rejection or replace its authorized snapshot',async()=>{
+  try {
+    await move('tl-20');const id=await create();await modeled(id);await approvals(id);await act(id,'submit');const submitted=await row(id);
+    await collaborationCommand(await actor('st-01'),client,year,{action:'create',kind:'thread',audience:'internal',title:'Post-submission audit follow-up',body:'Later discussion does not replace the already-authorized submitted payload.',sourceRefs:['D64'],assigneeId:null,dueDate:null});
+    await move('tl-29');await act(id,'response');expect((await row(id)).status).toBe('rejected');expect((await row(id)).snapshot).toEqual(submitted.snapshot);
+    await act(id,'correct_identity');await approvals(id);await act(id,'submit');const corrected=await row(id);await act(id,'response');await act(id,'response');expect((await row(id)).status).toBe('accepted');expect((await row(id)).snapshot_hash).toBe(corrected.snapshot_hash);
+  }finally{await move('default');}
+});
 test('an open review note blocks even explicitly acknowledged and separately approved simulations',async()=>{
   const reviewer=await actor('st-02');let noteId='';
   try {await move('tl-20');const id=await create();await modeled(id);await approvals(id);

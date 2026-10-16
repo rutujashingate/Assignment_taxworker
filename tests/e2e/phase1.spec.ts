@@ -15,7 +15,7 @@ test("entry and every primary navigation link work without page JavaScript", asy
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await page.getByRole("link",{name:"Open workpaper"}).click();
     await expect(page.getByText("Packet import details",{exact:true})).toBeVisible();
-    for (const [link, heading] of [["Tax Return","Tax Return"],["Documents","Documents"],["Workflow","Workflow & collaboration"],["History & Scenarios","History & Scenarios"],["Review Desk","Review Desk"]]) {
+    for (const [link, heading] of [["Tax Return","Tax Return"],["Documents","Documents"],["Tasks & Approvals","Tasks & Approvals"],["History","History & Scenarios"],["Review","Review"]]) {
       await page.getByRole("navigation",{name:"Engagement"}).getByRole("link",{name:link,exact:true}).click();
       await expect(page.getByRole("heading",{name:heading,exact:true})).toBeVisible();
     }
@@ -45,15 +45,15 @@ test("find the household, save version, reload, and retain session in a new cont
   await page.getByRole("button",{name:"Search",exact:true}).click();
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await page.getByRole("link",{name:"Open Okafor–Lindqvist"}).click();
-  await expect(page.getByRole("heading",{name:"Review Desk",exact:true})).toBeVisible();
-  const overview = page.getByRole("region",{name:"Review Desk",exact:true});
+  await expect(page.getByRole("heading",{name:"Review",exact:true})).toBeVisible();
+  const overview = page.getByRole("region",{name:"Review",exact:true});
+  await page.getByText("Packet import details",{exact:true}).click();
   await expect(overview.getByText("74",{exact:true})).toBeVisible();
   await expect(overview.getByText("199",{exact:true})).toBeVisible();
   await expect(overview.getByText("3,012",{exact:true})).toBeVisible();
   await expect(overview.getByText("ee01f8508bd2fd9854754b82fd9c4a055bdc55e2778a132002a25381c412ad19",{exact:true})).toBeVisible();
   await page.screenshot({path:"test-results/phase1-overview.png",fullPage:true});
-  await page.getByRole("link",{name:"Choose computed version",exact:true}).click();
-  await expect(page.getByLabel("Computed version")).toBeFocused();
+  await page.locator(".workpaper-data > summary").click();
   const picker = page.getByLabel("Computed version");
   const target = await picker.inputValue() === "v1" ? "v2" : "v1";
   await picker.selectOption(target);
@@ -94,6 +94,7 @@ test("signed sessions keep database preferences across identity changes", async 
   expect(await page.evaluate(() => document.cookie.includes("miraflores_demo"))).toBe(false);
 
   await page.getByRole("link",{name:"Open workpaper"}).click();
+  await page.locator(".workpaper-data > summary").click();
   const picker = page.getByLabel("Computed version");
   const target = await picker.inputValue() === "v1" ? "v2" : "v1";
   await picker.selectOption(target);

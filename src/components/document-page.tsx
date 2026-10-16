@@ -41,7 +41,7 @@ export function DocumentPage({ document, selectedField, fieldHref, masked }: {
       : ["books_profit_loss", "books_transaction_detail", "books_report", "mileage_log", "rental_ledger"].includes(document.type) ? <LedgerTemplate>{contents}</LedgerTemplate>
         : ["donation_receipt", "foreign_bank_statement", "payment_confirmation", "rental_owner_statement"].includes(document.type) ? <StatementTemplate>{contents}</StatementTemplate> : <GenericTemplate>{contents}</GenericTemplate>}
     {!document.values.length ? <div className="evidence-gap" role="note"><strong>Missing extraction on this page</strong><p>The printed page is available, but the packet contains no extracted fields for page {document.page.page}. This is page-level evidence; no extracted-value ID or lot has been invented.</p>{typeof document.extraction.reason === "string" && <p>{document.extraction.reason}</p>}</div> : <section className="extracted-fields" aria-label="Pipeline extracted fields">
-      <h3>Pipeline extracted fields <span className="count-tag">{document.values.length}</span></h3><p>Extraction confidence describes the pipeline reading. Human verification is recorded separately.</p>
+      <h3>Pipeline extracted fields <span className="count-tag">{document.values.length}</span></h3><p>Extraction confidence describes the pipeline reading. Human verification actions are not implemented in this workspace; confidence is not a CPA sign-off.</p>
       <div className="field-grid">{document.values.map(value => {
         const location = locatePrintedField(document.page.printed_content, value);
         const precise = located.some(item => item.value.id === value.id);

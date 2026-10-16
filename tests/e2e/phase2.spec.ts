@@ -8,6 +8,7 @@ async function start(page: Page, identity = "st-01") {
   await page.getByLabel("Demo identity").selectOption(identity);
   await expect(page.getByRole("heading",{name:"Engagements",exact:true})).toBeVisible();
   await page.getByRole("link",{name:"Open workpaper"}).click();
+  await page.locator(".workpaper-data > summary").click();
   const picker = page.getByLabel("Computed version");
   if (await picker.inputValue() !== "v3") {
     await picker.selectOption("v3");

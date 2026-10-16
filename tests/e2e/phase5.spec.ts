@@ -56,7 +56,7 @@ test('two browser windows receive a preparer question correction; a stale review
   const prep=await session(browser,'st-01');const reviewer=await session(browser,'st-02');
   try {
     const q=await create(prep.context);for(const p of [prep.page,reviewer.page])await p.goto(`${base}/workflow?item=${q.id}`);
-    await expect(reviewer.page.getByRole('status',{name:'Live update status'})).toContainText('3 seconds');
+    await expect(reviewer.page.getByRole('status',{name:'Live update status'})).toContainText('Updates automatically');
     await detail(reviewer.page).getByText('Edit assignment, deadline or note',{exact:true}).click();
     const stale=reviewer.page.getByRole('form',{name:'Edit collaboration record',exact:true});
     await stale.getByRole('textbox',{name:'Text',exact:true}).fill('Reviewer draft which must be preserved on conflict.');await stale.getByLabel('Reason for change',{exact:true}).fill('Reviewer draft in second window.');

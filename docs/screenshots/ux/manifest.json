@@ -1,0 +1,109 @@
+{
+  "capture": "Real Chromium UI; isolated test database; uncommitted working tree",
+  "images": [
+    {
+      "file": "after-evidence-desktop.png",
+      "stage": "after",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "sha256": "80338427728b16acdc97101a2578e7764eb1531ff545092967c231e35ece82e9",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68&ref=ev-1076#evidence-inspector"
+    },
+    {
+      "file": "after-issue-desktop.png",
+      "stage": "after",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "sha256": "25ce47d877f20608f0a2716655c41d48d60537eebf4c2e020c7516e1b71185be",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding"
+    },
+    {
+      "file": "after-review-desktop.png",
+      "stage": "after",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "sha256": "5fb592aa6529ed14c5ddd8ff6529f75cef37b418df5eafc80d697d748fbce069",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review"
+    },
+    {
+      "file": "after-review-mobile.png",
+      "stage": "after",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "sha256": "7e83c1d8f42236bdc6010a643ef5f3cd87f05119edeadbcac7d21b5a5b765808",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review"
+    },
+    {
+      "file": "after-review-tablet.png",
+      "stage": "after",
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "sha256": "5ce96ea3c79501ea74f2618f42663118f467903ba41d08392077676d4b0dd94a",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review"
+    },
+    {
+      "file": "before-issue-desktop.png",
+      "stage": "before",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "sha256": "d381cfd6a22da37c5d752d8a1d7524602d90d5f2b51846a3879b38b268cbc65d",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68#selected-finding"
+    },
+    {
+      "file": "before-review-desktop.png",
+      "stage": "before",
+      "viewport": {
+        "width": 1440,
+        "height": 1050
+      },
+      "sha256": "e9837566e4f06e1da392b0974097fb83a966d2c70beb8d33525fb73ca9388019",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review"
+    },
+    {
+      "file": "before-review-mobile.png",
+      "stage": "before",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "sha256": "4ea80deba0dbddb4d4eeb1cc42c07cdaf0cb77d5a7fc6a03a4b46cb56bcf0a17",
+      "actor": "st-04",
+      "masked": true,
+      "sourceAsOf": "2026-06-23T06:05:00Z",
+      "route": "/engagements/CL-20417/2025/review"
+    }
+  ]
+}

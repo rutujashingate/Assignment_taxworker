@@ -1,0 +1,72 @@
+[
+  {
+    "code": "BROKER_PAGE_UNEXTRACTED",
+    "outcome": "confirmed_mismatch",
+    "route": "/engagements/CL-20417/2025/review?issue=BROKER_PAGE_UNEXTRACTED%3AD31%3AM18&ref=doc%3AD31%23page32",
+    "sourceRef": "doc:D31#page32",
+    "sourcePage": "doc:D31#page32",
+    "screenshot": "screenshots/findings/BROKER_PAGE_UNEXTRACTED.png",
+    "sha256": "10c72de94569e9276620c5a9e5c5a029f1a9fea182952216b6d97064ca9a3ba0",
+    "masked": true
+  },
+  {
+    "code": "CA_PAYMENT_YEAR",
+    "outcome": "confirmed_mismatch",
+    "route": "/engagements/CL-20417/2025/review?issue=CA_PAYMENT_YEAR%3AD68&ref=ev-1076",
+    "sourceRef": "ev-1076",
+    "sourcePage": "doc:D68#page1",
+    "screenshot": "screenshots/findings/CA_PAYMENT_YEAR.png",
+    "sha256": "8182b04398336505e9115be61b5f0875bdad8b2803575c0e172b1d93eb787ad4",
+    "masked": true
+  },
+  {
+    "code": "CARD_RECEIPTS_OVERLAP",
+    "outcome": "confirmed_mismatch",
+    "route": "/engagements/CL-20417/2025/review?issue=CARD_RECEIPTS_OVERLAP%3AD14%2BD15%2BD21&ref=doc%3AD15%23page3",
+    "sourceRef": "doc:D15#page3",
+    "sourcePage": "doc:D15#page3",
+    "screenshot": "screenshots/findings/CARD_RECEIPTS_OVERLAP.png",
+    "sha256": "703332e121ad8400425062251db586fd38bbce0fbaba13c65f86b14bfa979048",
+    "masked": true
+  },
+  {
+    "code": "CHARITY_AMOUNT_UNCLEAR",
+    "outcome": "needs_information",
+    "route": "/engagements/CL-20417/2025/review?issue=CHARITY_AMOUNT_UNCLEAR%3AD64&ref=ev-1049",
+    "sourceRef": "ev-1049",
+    "sourcePage": "doc:D64#page1",
+    "screenshot": "screenshots/findings/CHARITY_AMOUNT_UNCLEAR.png",
+    "sha256": "d4e65ee1ece37c00f2d21da6aa10163d060a24f1c6dc37ce11f0d9cf0ea74291",
+    "masked": true
+  },
+  {
+    "code": "INTEREST_SWEEP_OVERLAP",
+    "outcome": "candidate",
+    "route": "/engagements/CL-20417/2025/review?issue=INTEREST_SWEEP_OVERLAP%3AD28%2BD29&ref=ev-0492",
+    "sourceRef": "ev-0492",
+    "sourcePage": "doc:D28#page1",
+    "screenshot": "screenshots/findings/INTEREST_SWEEP_OVERLAP.png",
+    "sha256": "e0f0baec379e36a63ab2fd5e12dac837b435ae02c8dca6231ac494da125f4a5c",
+    "masked": true
+  },
+  {
+    "code": "MILEAGE_DUPLICATE_PAGES",
+    "outcome": "confirmed_mismatch",
+    "route": "/engagements/CL-20417/2025/review?issue=MILEAGE_DUPLICATE_PAGES%3AD23&ref=doc%3AD23%23page2",
+    "sourceRef": "doc:D23#page2",
+    "sourcePage": "doc:D23#page2",
+    "screenshot": "screenshots/findings/MILEAGE_DUPLICATE_PAGES.png",
+    "sha256": "c844a0ed777f6026516e2f9b518dad1d6652caf3f76e29316776e1dfad055491",
+    "masked": true
+  },
+  {
+    "code": "W2_CONTRIBUTION_COUNT",
+    "outcome": "pass",
+    "route": "/engagements/CL-20417/2025/return?line=F1040.1a&ref=ev-0035",
+    "sourceRef": "ev-0035",
+    "sourcePage": "doc:D09#page1",
+    "screenshot": "screenshots/findings/W2_CONTRIBUTION_COUNT.png",
+    "sha256": "bdbbf06ff9be9e2b9f5fa8042117ae60ddf031b25b3a7c4a3eb2a1a127e7cd48",
+    "masked": true
+  }
+]

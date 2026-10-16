@@ -37,7 +37,7 @@ export function LiveChanges({clientId,taxYear,actorId}:{clientId:string;taxYear:
     }catch(e){setError(e instanceof Error?e.message:'Unable to mark notification read.');}
   }
   return <aside className="live-bar" aria-label="Engagement updates">
-    <span role="status" aria-label="Live update status">{error||'Live updates · checks every 3 seconds'}</span>
+    <span role="status" aria-label="Live update status">{error||'Updates automatically'}</span>
     {(error||pending)&&<button className="text-button" type="button" onClick={()=>{dirty.current=false;setPending(false);window.dispatchEvent(new Event('workpaper-saved'));router.refresh();}}>Refresh current view</button>}
     {pending&&<span>Updates available. Your draft is preserved until you reload.</span>}
     <details className="notification-menu"><summary>Notifications ({data?.notifications.filter(n=>!n.readAt).length??0} unread)</summary>
