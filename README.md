@@ -98,7 +98,7 @@ Current documentation was fetched with Context7 for [Next.js server authenticati
 
 ## Phase 7: history, replay and simulated filing
 
-Open **History & Scenarios**. Compare immutable v1/v2/v3 metadata and per-line differences. Each of the five named scenarios displays its exact supplied `what_if.alternatives` result in isolation. The custom calculator uses only supplied per-dollar rates and changes no live state.
+Open **History**. Compare immutable v1/v2/v3 metadata and per-line differences. Each of the five named scenarios displays its exact supplied `what_if.alternatives` result in isolation. The custom calculator uses only supplied per-dollar rates and changes no live state.
 
 Daniel (`st-02`) and Helen (`st-03`) can move the shared season clock through all 29 supplied events or reset to v3 **2026-06-23T06:05:00Z**. Direct evidence/search/client-source APIs and exports use the same availability rules. D71 appears at `tl-22`; D72 appears at `tl-29`. Early dates show no computed return until March 4. Source records and original engine outputs never change. Human decisions keep actual timestamps. Later-dated simulation rows remain saved but are withheld when replay rewinds before their recorded source dates.
 
@@ -117,7 +117,7 @@ The readiness result is **simulation readiness**, not production tax readiness. 
 
 ## Phase 8 submission and audit
 
-Open **Submission & audit** (`/handoff`) as staff for authenticated downloads of the one-page product/model statement, deterministic findings, actual UI screenshots, every-requirement matrix, interaction audit, deployment checklist, video script and exact QA results. Client identities cannot access these internal submission artifacts. `docs/REQUIREMENTS_AUDIT.md` is generated from the same 70-row registry as Coverage; it explicitly records incomplete requirements. The complete original brief is **not** claimed fulfilled.
+Assignment materials live in the repository: [product/model statement](docs/PRODUCT_AND_DATA_MODEL.md), [findings](docs/FINDINGS_REPORT.md), [requirements audit](docs/REQUIREMENTS_AUDIT.md), [deployment checklist](docs/DEPLOYMENT_HANDOFF.md) and [video script](docs/VIDEO_SCRIPT.md). These are submission/support documents, not part of the CPA navigation. Legacy authenticated `/handoff` and `/coverage` URLs remain compatible with earlier links, but the working interface does not link to them. Clients still cannot access these internal artifacts. The complete original brief is **not** claimed fulfilled.
 
 Generate/check the source-only reports with:
 
@@ -137,7 +137,7 @@ Phase 8 fixes unavailable filing/window controls and role combinations that coul
 
 Open the household and choose **Review next issue**. Compare the reported value, supported value and difference, then open **View source evidence** when needed. **Explain** and **Assign** prepare a review-status edit; choose **Save review status** to persist it. **Request information** opens a linked question draft in **Tasks & Approvals**; **Create record** actually saves and shares it. Source corrections and formal **Submit for review** remain unavailable.
 
-The primary navigation is **Review / Tax Return / Documents / Tasks & Approvals / History**. **More tools** retains CPA Records, search, time, administration, Coverage and submission downloads. See [UX validation and before/after screenshots](docs/UX_SIMPLIFICATION_VALIDATION.md) for exact changes, tests and limits.
+The primary navigation is **Review / Tax Return / Documents / Tasks & Approvals / History**. **Workpaper tools** are always visible in the sidebar: **Filing & Approvals** (explicitly labeled Simulation), CPA Records, search, time and role-permitted firm administration. The filing shortcut opens the actual approvals/filing section in Tasks & Approvals; it does not create or submit anything. On phones the tool links form a horizontally scrollable row with keyboard access. Assignment coverage, research and handoff links are excluded from the CPA interface, including Tax areas. See [UX validation and before/after screenshots](docs/UX_SIMPLIFICATION_VALIDATION.md) for the earlier review simplification; current navigation screenshots are in `docs/screenshots/ux/`.
 
 
 ## Click an amount to trace it
