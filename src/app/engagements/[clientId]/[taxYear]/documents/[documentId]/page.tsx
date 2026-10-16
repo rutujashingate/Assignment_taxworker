@@ -28,7 +28,7 @@ export default async function Document({ params, searchParams }: {
   const inspection = inspectEvidence(workspace, ref);
   await recordEvidenceView(workspace, ref);
   const base = `/engagements/${clientId}/${taxYear}`;
-  const href = (value: string) => `${documentHref(base,documentId,document.page.page,value)}#evidence-inspector`;
+  const href = (value: string) => `${documentHref(base,documentId,document.page.page,value)}#tax-line-usage`;
   return <>
     <div className="document-page-heading"><div><Link className="text-button" href={`${base}/documents`}>← All documents</Link><h2>{documentId} · {document.title}</h2><p>{document.extraction.status.replaceAll("_"," ")} · Received {document.receivedAt.slice(0,10)}</p>{document.superseded && <span className="superseded-tag">Superseded in {workspace.index.version.version}; original preserved</span>}</div><span className="count-tag">Page {document.page.page} of {document.pageNumbers.length}</span></div>
     <nav className="document-pages" aria-label="Document pages">{document.pageNumbers.map(page => <Link prefetch={false} key={page} aria-current={page === document.page.page ? "page" : undefined} href={documentHref(base,documentId,page)} aria-label={`Page ${page}`}>{page}</Link>)}</nav>

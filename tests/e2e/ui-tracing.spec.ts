@@ -94,8 +94,8 @@ test('E01 E02 E08: keyboard-only wage number to D09 and back through tax usage',
   const amount=page.getByRole('link',{name:'Trace amount for F1040.1a',exact:true});await tabTo(page,amount);await expect(amount).toBeFocused();await page.keyboard.press('Enter');
   const inspector=page.locator('#evidence-inspector'),source=inspector.getByRole('link',{name:'Open source ev-0035',exact:true});await tabTo(page,source);await page.keyboard.press('Enter');
   await expect(inspector.locator('.printed-selection')).toContainText('107,800.00');
-  const document=inspector.getByRole('link',{name:'Open D09 document',exact:true});await tabTo(page,document);await page.keyboard.press('Enter');
-  const field=page.getByTestId('printed-field-ev-0035');await tabTo(page,field);await page.keyboard.press('Enter');
+  const document=inspector.getByRole('link',{name:'Open D09 document',exact:true});await tabTo(page,document);await page.keyboard.press('Enter');await expect(page).toHaveURL(/\/documents\/D09/u);
+  const field=page.getByTestId('printed-field-ev-0035');await tabTo(page,field);await page.keyboard.press('Enter');await expect(page).toHaveURL(/#tax-line-usage$/u);await expect(page.getByRole('region',{name:'Tax line usage',exact:true})).toBeInViewport();
   const usage=page.getByRole('region',{name:'Tax line usage',exact:true}).getByRole('link',{name:'Open return line F1040.1a',exact:true});await tabTo(page,usage);await expect(usage).toContainText('212,400');await page.keyboard.press('Enter');
   await expect(inspector.locator('.inspector-amount')).toHaveText('$212,400');
 });
