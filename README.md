@@ -17,7 +17,7 @@ npm run dev
 
 If the database already exists, skip `createdb`. Open **http://127.0.0.1:3000**. Leave **Start as** set to Priya Raman and click **Open workspace**, then **Open workpaper**. Your identity is the CPA; the engagement is the client. The header selector also offers restricted taxpayer identities for permission demonstrations.
 
-Expand **Return version & data**, choose **v3 · latest**, then **Tax Return**. Start at `F1040.2b` and follow `SchB.4 → SchB.2 → SchB.1.1 / SchB.1.2 → ev-0492 / ev-0538`. The inspector shows the actual D28/D29 printed interest fields, pipeline reading/confidence and a separate unrecorded human-verification status. To go in reverse, open **Documents**, search **D29**, open it and click its underlined interest field. **Tax line usage** links back to `F1040.2b` and the other actual dependent lines.
+Expand **Return version & data**, choose **v3 · latest**, then **Tax Return**. Start at `F1040.2b` and follow `SchB.4 → SchB.2 → SchB.1.1 / SchB.1.2 → ev-0492 / ev-0538`. The inspector shows the actual D28/D29 printed interest fields, pipeline reading/confidence and a separate unrecorded human-verification status. To go in reverse, open **Documents**, search **D29**, open it and select its linked interest field. **Tax line usage** links back to `F1040.2b` and the other actual dependent lines.
 
 On **Review**, seven independent checks produce six v3 findings and one passing W-2 control. They cover sweep interest, duplicate mileage pages, card receipts already in the books, payment-year designation, the unextracted M18 lot and the ambiguous donation. The 11 supplied engine diagnostics appear separately. Select an issue and open a source reference to inspect it beside the queue; filter by review state, blocker, tax area or assignee.
 
@@ -138,3 +138,12 @@ Phase 8 fixes unavailable filing/window controls and role combinations that coul
 Open the household and choose **Review next issue**. Compare the reported value, supported value and difference, then open **View source evidence** when needed. **Explain** and **Assign** prepare a review-status edit; choose **Save review status** to persist it. **Request information** opens a linked question draft in **Tasks & Approvals**; **Create record** actually saves and shares it. Source corrections and formal **Submit for review** remain unavailable.
 
 The primary navigation is **Review / Tax Return / Documents / Tasks & Approvals / History**. **More tools** retains CPA Records, search, time, administration, Coverage and submission downloads. See [UX validation and before/after screenshots](docs/UX_SIMPLIFICATION_VALIDATION.md) for exact changes, tests and limits.
+
+
+## Click an amount to trace it
+
+In **Tax Return**, select a displayed amount (for example **$6,450**); the inspector shows its actual input amounts and supporting records. Search accepts formatted amounts such as `$6,450`. Follow input amounts to a linked source field; the selected field is brought into view and receives keyboard focus. If it cannot be localized, the actual page is shown without a false highlight. Use **Tax line usage** to return from the document to its tax destinations; selecting a standalone document field jumps directly to that usage section. The search stays in place during the trace. **Return to line list** and **Selected amount & evidence** provide navigation on smaller screens.
+
+Review figures open their existing related reference or the complete reconciliation; unknown amounts remain unlinked. Sale proceeds/basis link to the supplied extracted fields, while gain links to the original calculation. Original computed amounts, source text and permissions are unchanged. Links use backgrounds, borders, hover and keyboard focus instead of underlines.
+
+The latest complete 80-item checklist audit and remaining limitations are in [UI_UX_CHECKLIST_AUDIT.md](docs/UI_UX_CHECKLIST_AUDIT.md). Formal human verification, source corrections and production sign-offs are still not implemented.
