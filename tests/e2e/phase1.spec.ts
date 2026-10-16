@@ -15,7 +15,7 @@ test("entry and every primary navigation link work without page JavaScript", asy
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await page.getByRole("link",{name:"Open workpaper"}).click();
     await expect(page.getByText("Packet import details",{exact:true})).toBeVisible();
-    for (const [link, heading] of [["Tax Return","Tax Return"],["Documents","Documents"],["Workflow","Questions, tasks & approvals"],["History & Scenarios","History & Scenarios"],["Review Desk","Review Desk"]]) {
+    for (const [link, heading] of [["Tax Return","Tax Return"],["Documents","Documents"],["Workflow","Workflow & collaboration"],["History & Scenarios","History & Scenarios"],["Review Desk","Review Desk"]]) {
       await page.getByRole("navigation",{name:"Engagement"}).getByRole("link",{name:link,exact:true}).click();
       await expect(page.getByRole("heading",{name:heading,exact:true})).toBeVisible();
     }

@@ -2,6 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { and, eq, inArray, lte, sql } from "drizzle-orm";
 import { z } from "zod";
+import { engagementRedactor } from '../collaboration/privacy';
 import { db } from "../db/client";
 import { auditEvents, engagementAccess, identities, workpaperIssues, type Actor } from "../db/schema";
 import { assertStaff, authorizeEngagement, HttpError } from "../auth/permissions";
@@ -54,7 +55,8 @@ export async function getReviewDesk(workspace: EvidenceWorkspace) {
   });
   const assignees=await getAssignees(workspace);
   const diagnostics=workspace.index.version.diagnostics.map(diagnostic=>({code:String(diagnostic.code),severity:String(diagnostic.severity),message:String(diagnostic.message),refs:Array.isArray(diagnostic.refs)?diagnostic.refs.filter((ref):ref is string=>typeof ref==="string"):[]}));
-  return {version:workspace.index.version.version,checks,issues,assignees,diagnostics,canTriage:canTriage(workspace.actor)};
+  const redact=await engagementRedactor(workspace.clientId,workspace.taxYear);
+  return {version:workspace.index.version.version,checks,issues:workspace.actor.sensitiveDataClearance?issues:redact(issues),assignees,diagnostics,canTriage:canTriage(workspace.actor)};
 }
 export type ReviewDeskData = Awaited<ReturnType<typeof getReviewDesk>>;
 export type ReviewFilters = {status?:string;blocker?:string;area?:string;assignee?:string};
@@ -85,19 +87,22 @@ export async function updateIssue(actor:Actor,clientId:string,taxYear:number,key
     const sources=evidenceRefs.map(ref=>workspace.index.resolve(ref));
     if(!sources.some(source=>source.status==="resolved"&&!["line","parameter","fx","version"].includes(source.kind))) throw new HttpError(400,"Resolution requires at least one linked source record, not only a computed line.");
   }
+  const redact=await engagementRedactor(clientId,taxYear);
+  const safeView=(row:Row)=>actor.sensitiveDataClearance?issueView(row,actor):redact(issueView(row,actor));
   return db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockName(workspace)}, 0))`);
     const [before]=await tx.select().from(workpaperIssues).where(and(scopeWhere(workspace),eq(workpaperIssues.issueKey,key))).limit(1);
     if(!before||before.revision!==command.expectedRevision) throw new HttpError(409,"This issue changed in another window. Reload before saving again.");
     let note=command.note;
-    if(!actor.sensitiveDataClearance&&maskNote(before.note)!==before.note) {
-      if(command.note!==maskNote(before.note)) throw new HttpError(403,"A cleared reviewer must edit this note's protected identifiers.");
+    if(!actor.sensitiveDataClearance&&redact(maskNote(before.note))!==before.note) {
+      if(command.note!==redact(maskNote(before.note))) throw new HttpError(403,"A cleared reviewer must edit this note's protected identifiers.");
       note=before.note;
     }
-    if(before.status===command.status&&before.assigneeId===command.assigneeId&&before.note===note&&JSON.stringify(before.evidenceRefs)===JSON.stringify(evidenceRefs)) return issueView(before,actor);
+    if(!actor.sensitiveDataClearance&&redact(note)!==note&&note!==before.note)throw new HttpError(403,'A cleared reviewer must enter protected identifiers.');
+    if(before.status===command.status&&before.assigneeId===command.assigneeId&&before.note===note&&JSON.stringify(before.evidenceRefs)===JSON.stringify(evidenceRefs)) return safeView(before);
     const [after]=await tx.update(workpaperIssues).set({status:command.status,assigneeId:command.assigneeId,note,evidenceRefs,revision:before.revision+1,updatedBy:actor.id,updatedAt:new Date()}).where(and(scopeWhere(workspace),eq(workpaperIssues.issueKey,key),eq(workpaperIssues.revision,command.expectedRevision))).returning();
     if(!after) throw new HttpError(409,"This issue changed. Reload before saving again.");
     await tx.insert(auditEvents).values({actorId:actor.id,clientId,taxYear,action:"review_issue_updated",target:key,beforeJson:issueView(before,actor),afterJson:issueView(after,actor)});
-    return issueView(after,actor);
+    return safeView(after);
   });
 }

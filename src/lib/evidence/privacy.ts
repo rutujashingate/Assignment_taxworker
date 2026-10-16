@@ -3,7 +3,7 @@ import type { EvidencePacket } from "./resolver";
 const sensitiveKey = /ssn|ip[_ ]?pin|account[_ ]?number|^account$|routing|^dob$|date[_ ]?of[_ ]?birth/iu;
 export const isSensitiveValue = (value: { field: string; value_type?: unknown }) => value.value_type === "ssn" || value.value_type === "account_number" || sensitiveKey.test(value.field);
 
-export function maskEvidence(packet: EvidencePacket): EvidencePacket {
+export function createEvidenceRedactor(packet: Pick<EvidencePacket, 'household'|'extracted_values'>) {
   const secrets = new Set<string>();
   const add = (value: unknown) => { if ((typeof value === "string" || typeof value === "number") && String(value).length >= 4) secrets.add(String(value)); };
   function gather(value: unknown) {
@@ -19,7 +19,8 @@ export function maskEvidence(packet: EvidencePacket): EvidencePacket {
   const tokens = [...secrets].sort((a, b) => b.length - a.length);
   function redact(value: unknown): unknown {
     if (typeof value === "string") {
-      let text = value.replace(/\b\d{3}-\d{2}-\d{4}\b/gu, "[REDACTED SSN]");
+      let text = value.replace(/\b\d{3}-\d{2}-\d{4}\b/gu, "[REDACTED SSN]")
+        .replace(/(\b(?:IP[ _-]?PIN|routing|account(?: number)?)\s*[:#]?\s*)[\d -]{6,}/giu, '$1[REDACTED]');
       for (const token of tokens) text = text.replaceAll(token, "[REDACTED]");
       return text;
     }
@@ -32,5 +33,7 @@ export function maskEvidence(packet: EvidencePacket): EvidencePacket {
     }
     return value;
   }
-  return redact(packet) as EvidencePacket;
+  return <T>(value: T): T => redact(value) as T;
 }
+
+export function maskEvidence(packet: EvidencePacket): EvidencePacket { return createEvidenceRedactor(packet)(packet); }

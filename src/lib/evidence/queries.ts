@@ -6,7 +6,7 @@ import { assertStaff, authorizeEngagement, HttpError } from "../auth/permissions
 import { getPreferences } from "../workpaper/preferences";
 import { DEFAULT_AS_OF, type PacketLine, type PacketValue } from "../packet/schema";
 import { createEvidenceIndex, type EvidencePacket, type EvidenceIndex, type EvidenceResolution, type TraceNode } from "./resolver";
-import { maskEvidence } from "./privacy";
+import { isSensitiveValue, maskEvidence } from "./privacy";
 import { pageReference } from "./references";
 
 export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYear: number) {
@@ -51,6 +51,23 @@ export async function recordEvidenceView(workspace: EvidenceWorkspace, ref: stri
   await db.insert(auditEvents).values({ actorId: workspace.actor.id, clientId: workspace.clientId, taxYear: workspace.taxYear,
     action: "evidence_viewed", target: ref, beforeJson: null,
     afterJson: { reference: ref, version: workspace.index.version.version, asOf: DEFAULT_AS_OF, sensitiveIdentifiersMasked: workspace.masked } });
+  const resolved = workspace.index.resolve(ref);
+  const documentId = resolved.status !== 'resolved' ? null : resolved.kind === 'document' ? resolved.document.id : resolved.kind === 'page' ? resolved.documentId : resolved.kind === 'extracted_value' ? resolved.extraction.document_id : null;
+  if (documentId && [...workspace.index.values.values()].some(value => value.document_id === documentId && isSensitiveValue(value))) {
+    await db.insert(auditEvents).values({actorId:workspace.actor.id,clientId:workspace.clientId,taxYear:workspace.taxYear,
+      action:'sensitive_document_viewed',target:documentId,beforeJson:null,afterJson:{reference:ref,masked:workspace.masked,version:workspace.index.version.version}});
+  }
+}
+
+export async function revealSensitiveValue(actor: Actor, clientId: string, taxYear: number, ref: string) {
+  assertStaff(actor); await authorizeEngagement(actor,clientId,taxYear);
+  if (!actor.sensitiveDataClearance) throw new HttpError(403,'Sensitive-data clearance is required.');
+  const workspace=await getEvidenceWorkspace(actor,clientId,taxYear);
+  const resolved=workspace.index.resolve(ref);
+  if(resolved.status!=='resolved'||resolved.kind!=='extracted_value'||!isSensitiveValue(resolved.extraction)) throw new HttpError(404,'Sensitive field not found.');
+  await db.insert(auditEvents).values({actorId:actor.id,clientId,taxYear,action:'sensitive_value_revealed',target:ref,beforeJson:null,
+    afterJson:{reference:ref,documentId:resolved.extraction.document_id,version:workspace.index.version.version}});
+  return {ref,label:resolved.extraction.label??resolved.extraction.field,value:resolved.extraction.value,textAsRead:resolved.extraction.text_as_read};
 }
 
 export function documentView(index: EvidenceIndex, documentId: string, pageNumber = 1) {

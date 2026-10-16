@@ -1,6 +1,7 @@
 import { pgTable, text, integer, boolean, timestamp, date, jsonb, customType, primaryKey, bigint, uuid } from "drizzle-orm/pg-core";
 import type { PacketDocument, PacketVersion } from "../packet/schema";
 import type { CheckResult, IssueState } from "../review/types";
+import type { ItemKind } from "../collaboration/types";
 
 const bytes = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
 export const packetImports = pgTable("packet_import", {
@@ -64,3 +65,27 @@ export const workpaperIssues = pgTable("workpaper_issue", {
   evidenceRefs: jsonb("evidence_refs").$type<string[]>().notNull().default([]), revision: integer("revision").notNull().default(1),
   updatedBy: text("updated_by").notNull(), updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, t => [primaryKey({columns:[t.clientId,t.taxYear,t.version,t.issueKey]})]);
+
+export const collaborationItems = pgTable("collaboration_item", {
+  id: uuid("id").primaryKey(), clientId: text("client_id").notNull(), taxYear: integer("tax_year").notNull(),
+  kind: text("kind").$type<ItemKind>().notNull(), audience: text("audience").$type<'internal'|'client'>().notNull(),
+  title: text("title").notNull(), body: text("body").notNull(), sourceRefs: jsonb("source_refs").$type<string[]>().notNull().default([]),
+  assigneeId: text("assignee_id"), dueDate: date("due_date"), blocksFiling: boolean("blocks_filing").notNull().default(false),
+  status: text("status").$type<'open'|'answered'|'closed'>().notNull().default('open'), revision: integer("revision").notNull().default(1),
+  createdBy: text("created_by").notNull(), updatedBy: text("updated_by").notNull(),
+  createdAt: timestamp("created_at",{withTimezone:true}).notNull().defaultNow(), updatedAt: timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
+});
+export const collaborationMessages = pgTable("collaboration_message", {
+  id: uuid("id").primaryKey(), itemId: uuid("item_id").notNull(), kind: text("kind").$type<'reply'|'answer'>().notNull(),
+  body: text("body").notNull(), createdBy: text("created_by").notNull(), createdAt: timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+});
+export const collaborationAttachments = pgTable("collaboration_attachment", {
+  id: uuid("id").primaryKey(), itemId: uuid("item_id").notNull(), kind: text("kind").$type<'file'|'note'>().notNull(),
+  name: text("name").notNull(), note: text("note"), content: bytes("content"), mediaType: text("media_type").notNull(),
+  sha256: text("sha256").notNull(), sensitive: boolean("sensitive").notNull().default(true), createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+});
+export const collaborationNotifications = pgTable("collaboration_notification", {
+  id: uuid("id").primaryKey(), itemId: uuid("item_id").notNull(), recipientId: text("recipient_id").notNull(), event: text("event").notNull(),
+  readAt: timestamp("read_at",{withTimezone:true}), createdAt: timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+});
