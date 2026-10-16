@@ -43,3 +43,17 @@ test('E01 C01 E08: a formatted return amount traces through real input amounts t
     if(line==='SchB.1.1'){for(const ref of ['SchB.4','SchB.2'])await inspector.getByRole('link',{name:`Follow input ${ref}`,exact:true}).click();}
   }
 });
+
+test('E04 R06: sale proceeds and basis amounts open their own real source fields while gain opens the supplied calculation',async({page})=>{
+  await enter(page);const data=await(await page.request.get(`${api}/records/sales`)).json();const lot=data.lots.find((l:{documentId:string})=>l.documentId==='D74');
+  const fields=await Promise.all(lot.fieldRefs.map(async(ref:string)=>{const response=await page.request.get(`${api}/evidence?ref=${encodeURIComponent(ref)}`);expect(response.status()).toBe(200);return (await response.json()).extraction;}));
+  for(const field of ['proceeds','basis']){
+    const source=fields.find(f=>f?.field===`${lot.id}_${field}`);expect(source).toBeTruthy();
+    await page.goto(`${base}/records/sales`);await page.getByRole('link',{name:`Inspect ${field} for lot ${lot.id}`,exact:true}).click();
+    const inspector=page.locator('#evidence-inspector');await expect(inspector.locator('.inspector-ref')).toHaveText(source.id);await expect(inspector.getByTestId('printed-content')).not.toBeEmpty();
+    await expect(page.getByRole('region',{name:'Selected lot details',exact:true})).toContainText(lot.description);
+    await page.getByRole('link',{name:`Trace selected lot ${field}`,exact:true}).click();await expect(inspector.locator('.inspector-ref')).toHaveText(source.id);
+  }
+  await page.goto(`${base}/records/sales`);await page.getByRole('link',{name:`Inspect gain for lot ${lot.id}`,exact:true}).click();await expect(page.locator('.inspector-ref')).toHaveText(lot.key);
+  await page.goto(`${base}/records/sales?lot=F8949.H.C6`);await expect(page.getByRole('region',{name:'Selected lot details',exact:true})).toContainText('Not supplied · evidence gap');
+});
