@@ -1,3 +1,4 @@
+import { SourceDateUnavailable } from "@/components/source-date-unavailable";
 import Link from 'next/link';
 import { redirect,notFound } from 'next/navigation';
 import { currentActor } from '@/lib/auth/session';
@@ -13,7 +14,7 @@ import { StagePlaceholder } from '@/components/stage-placeholder';
 export default async function Area({params,searchParams}:{params:Promise<{clientId:string;taxYear:string;area:string}>;searchParams:Promise<{ref?:string;lot?:string;q?:string;document?:string}>}) {
   const actor=await currentActor();if(!actor)redirect('/firm');if(actor.role==='client')return <StagePlaceholder title="CPA records" phase={6} description="Tax records are available to firm staff."/>;
   const [p,search]=await Promise.all([params,searchParams]);let result;
-  try{result=await getRecords(actor,p.clientId,Number(p.taxYear),p.area);}catch(e){if(e instanceof HttpError&&e.status===404)notFound();throw e;}
+  try{result=await getRecords(actor,p.clientId,Number(p.taxYear),p.area);}catch(e){if(e instanceof HttpError&&e.status===409)return <SourceDateUnavailable/>;if(e instanceof HttpError&&e.status===404)notFound();throw e;}
   const {workspace,model,lots,reviews,canReview}=result;const base=`/engagements/${p.clientId}/${p.taxYear}`;
   const lot=typeof search.lot==='string'?lots.find(l=>l.key===search.lot||l.id===search.lot):undefined;if(search.lot&&!lot)notFound();
   const ref=typeof search.ref==='string'?search.ref:lot?.key??model.trace;const inspection=inspectEvidence(workspace,ref);await recordEvidenceView(workspace,ref);

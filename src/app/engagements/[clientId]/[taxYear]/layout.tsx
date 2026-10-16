@@ -22,7 +22,7 @@ export default async function EngagementLayout({ children, params }: { children:
   return <AppShell actor={publicIdentity(actor)} identities={identities} engagement={engagement}>
     <div className="page-heading engagement-heading"><div><span className="eyebrow">{clientId} <span aria-hidden="true">/</span> {taxYear} TAX YEAR</span><h1>{engagement.name}</h1><p>Married filing jointly <span className="inline-dot">·</span> Federal 1040 <span className="inline-dot">·</span> California 540NR</p></div><span className="status-label neutral">{engagement.readiness}</span></div>
     {staff && preference && statistics && <>
-      <div className="engagement-toolbar"><VersionPicker key={actor.id} clientId={clientId} taxYear={taxYear} initial={preference} versions={statistics.versions}/><span className="fine-print">Original engine results · read-only</span></div>
+      <div className="engagement-toolbar"><VersionPicker key={`${actor.id}:${preference.selectedVersion}:${preference.revision}`} clientId={clientId} taxYear={taxYear} initial={preference} versions={statistics.versions}/><span className="fine-print">Original engine results · read-only</span></div>
       <section className="summary-grid compact" aria-label="Engagement data"><div className="summary-card"><span>Available documents</span><strong>{statistics.documentCount}</strong><small>Received by the workpaper date</small></div><div className="summary-card"><span>Computed return lines</span><strong>{statistics.lineCount}</strong><small>In your selected version</small></div><div className="summary-card"><span>Independent checks</span><strong className="text-value">Review Desk</strong><small>Issue triage available · corrections in Phase 4</small></div></section>
     </>}
     {children}

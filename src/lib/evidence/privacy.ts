@@ -1,6 +1,6 @@
 import type { EvidencePacket } from "./resolver";
 
-const sensitiveKey = /ssn|ip[_ ]?pin|account[_ ]?number|^account$|routing|^dob$|date[_ ]?of[_ ]?birth/iu;
+const sensitiveKey = /ssn|ip[_ ]?pin|account[_ ]?number|^account$|routing|^dob$|date[_ ]?of[_ ]?birth|^pin$|(?:taxpayer|spouse|ero|signature)[_ ]?pin/iu;
 export const isSensitiveValue = (value: { field: string; value_type?: unknown }) => value.value_type === "ssn" || value.value_type === "account_number" || sensitiveKey.test(value.field);
 
 export function createEvidenceRedactor(packet: Pick<EvidencePacket, 'household'|'extracted_values'>) {
@@ -19,7 +19,7 @@ export function createEvidenceRedactor(packet: Pick<EvidencePacket, 'household'|
   const tokens = [...secrets].sort((a, b) => b.length - a.length);
   function redact(value: unknown): unknown {
     if (typeof value === "string") {
-      let text = value.replace(/\b\d{3}-\d{2}-\d{4}\b/gu, "[REDACTED SSN]")
+      let text = value.replace(/(\b(?:taxpayer|spouse|ERO|signature|e-file)\s+PIN\s*[:#]?\s*)\d{4,6}\b/giu,"$1[REDACTED]").replace(/\b\d{3}-\d{2}-\d{4}\b/gu, "[REDACTED SSN]")
         .replace(/(\b(?:IP[ _-]?PIN|routing|account(?: number)?)\s*[:#]?\s*)[\d -]{6,}/giu, '$1[REDACTED]');
       for (const token of tokens) text = text.replaceAll(token, "[REDACTED]");
       return text;

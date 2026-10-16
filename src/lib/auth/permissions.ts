@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { engagementAccess, type Actor } from "../db/schema";
-import { DEFAULT_AS_OF } from "../packet/schema";
+import { readClock } from "../season/clock";
 import { isAvailable } from "../packet/availability";
 
 export class HttpError extends Error {
@@ -10,11 +10,12 @@ export class HttpError extends Error {
 export function assertStaff(actor: Actor) {
   if (actor.role === "client") throw new HttpError(403, "This workspace is available to firm staff only.");
 }
-export function assertActive(actor: Actor) {
-  if (!isAvailable(actor.activeFrom, DEFAULT_AS_OF)) throw new HttpError(403, "This identity is not active at the selected workpaper date.");
+export async function assertActive(actor: Actor) {
+  const {asOf}=await readClock();
+  if (!isAvailable(actor.activeFrom, asOf)) throw new HttpError(403, "This identity is not active at the selected workpaper date.");
 }
 export async function authorizeEngagement(actor: Actor, clientId: string, taxYear: number) {
-  assertActive(actor);
+  await assertActive(actor);
   const [access] = await db.select({ actorId: engagementAccess.actorId }).from(engagementAccess).where(and(
     eq(engagementAccess.actorId, actor.id), eq(engagementAccess.clientId, clientId), eq(engagementAccess.taxYear, taxYear),
   )).limit(1);

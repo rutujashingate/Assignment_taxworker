@@ -6,7 +6,7 @@ import { engagementRedactor } from '../collaboration/privacy';
 import { db } from "../db/client";
 import { auditEvents, engagementAccess, identities, workpaperIssues, type Actor } from "../db/schema";
 import { assertStaff, authorizeEngagement, HttpError } from "../auth/permissions";
-import { DEFAULT_AS_OF } from "../packet/schema";
+
 import { getEvidenceWorkspace, type EvidenceWorkspace } from "../evidence/queries";
 import { runIndependentChecks } from "./checks";
 import { ISSUE_STATES, type IssueView } from "./types";
@@ -25,13 +25,14 @@ export async function getAssignees(workspace: EvidenceWorkspace) {
   assertStaff(workspace.actor); await authorizeEngagement(workspace.actor,workspace.clientId,workspace.taxYear);
   return db.select({id:identities.id,name:identities.name,role:identities.role}).from(identities)
     .innerJoin(engagementAccess,eq(engagementAccess.actorId,identities.id))
-    .where(and(eq(engagementAccess.clientId,workspace.clientId),eq(engagementAccess.taxYear,workspace.taxYear),inArray(identities.role,triageRoles),lte(identities.activeFrom,DEFAULT_AS_OF.slice(0,10)))).orderBy(identities.id);
+    .where(and(eq(engagementAccess.clientId,workspace.clientId),eq(engagementAccess.taxYear,workspace.taxYear),inArray(identities.role,triageRoles),lte(identities.activeFrom,workspace.asOf.slice(0,10)))).orderBy(identities.id);
 }
 export async function getReviewDesk(workspace: EvidenceWorkspace) {
   assertStaff(workspace.actor); await authorizeEngagement(workspace.actor,workspace.clientId,workspace.taxYear);
   const checks=runIndependentChecks(workspace.index);
   const findings=checks.filter(check=>check.outcome!=="pass");
   const issues=await db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${workspace.clientId}:${workspace.taxYear}`},0))`);
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockName(workspace)}, 0))`);
     const existing=await tx.select().from(workpaperIssues).where(scopeWhere(workspace));
     const rows=new Map(existing.map(row=>[row.issueKey,row]));
@@ -90,6 +91,7 @@ export async function updateIssue(actor:Actor,clientId:string,taxYear:number,key
   const redact=await engagementRedactor(clientId,taxYear);
   const safeView=(row:Row)=>actor.sensitiveDataClearance?issueView(row,actor):redact(issueView(row,actor));
   return db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${workspace.clientId}:${workspace.taxYear}`},0))`);
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockName(workspace)}, 0))`);
     const [before]=await tx.select().from(workpaperIssues).where(and(scopeWhere(workspace),eq(workpaperIssues.issueKey,key))).limit(1);
     if(!before||before.revision!==command.expectedRevision) throw new HttpError(409,"This issue changed in another window. Reload before saving again.");

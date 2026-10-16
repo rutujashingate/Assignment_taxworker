@@ -4,22 +4,25 @@ import { db } from "../db/client";
 import { auditEvents, engagements, engineLines, engineVersions, packetAuxiliary, sourceDocuments, sourceValues, type Actor } from "../db/schema";
 import { assertStaff, authorizeEngagement, HttpError } from "../auth/permissions";
 import { getPreferences } from "../workpaper/preferences";
-import { DEFAULT_AS_OF, type PacketLine, type PacketValue } from "../packet/schema";
+import { type PacketLine, type PacketValue } from "../packet/schema";
 import { createEvidenceIndex, type EvidencePacket, type EvidenceIndex, type EvidenceResolution, type TraceNode } from "./resolver";
 import { isSensitiveValue, maskEvidence } from "./privacy";
+import { readClock } from "../season/clock";
 import { pageReference } from "./references";
 
 export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYear: number, options: {maskSensitive?:boolean} = {}) {
   assertStaff(actor); await authorizeEngagement(actor, clientId, taxYear);
   const [engagement] = await db.select().from(engagements).where(and(eq(engagements.clientId, clientId), eq(engagements.taxYear, taxYear))).limit(1);
   if (!engagement) throw new HttpError(404, "Engagement not found.");
+  const {asOf}=await readClock(clientId,taxYear);
   const preference = await getPreferences(actor, clientId, taxYear);
+  if(preference.selectedVersion==="none")throw new HttpError(409,"No computed return existed yet. Advance the season clock in History & Scenarios.");
   const hash = engagement.packetHash;
   const sections = ["household", "client", "prior_years", "tax_agency_records", "timeline", "engine_reference", "fx_rates"] as const;
   const [documentRows, valueRows, versionRows, lineRows, auxiliary] = await Promise.all([
     db.select({ record: sourceDocuments.record }).from(sourceDocuments).where(eq(sourceDocuments.packetHash, hash)),
     db.select({ record: sourceValues.record }).from(sourceValues).where(eq(sourceValues.packetHash, hash)),
-    db.select({ record: engineVersions.record }).from(engineVersions).where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(DEFAULT_AS_OF)))),
+    db.select({ record: engineVersions.record }).from(engineVersions).where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(asOf)))),
     db.select({ record: engineLines.record }).from(engineLines).where(and(eq(engineLines.packetHash, hash), eq(engineLines.version, preference.selectedVersion))).orderBy(engineLines.lineKey),
     db.select({ section: packetAuxiliary.section, record: packetAuxiliary.record }).from(packetAuxiliary).where(and(eq(packetAuxiliary.packetHash, hash), inArray(packetAuxiliary.section, [...sections]))),
   ]);
@@ -37,13 +40,17 @@ export async function getEvidenceWorkspace(actor: Actor, clientId: string, taxYe
     tax_agency_records: section("tax_agency_records"), timeline: section("timeline"), engine_reference: section("engine_reference"), fx_rates: section("fx_rates"),
   };
   const masked=options.maskSensitive===true||!actor.sensitiveDataClearance;
-  const index = createEvidenceIndex(masked ? maskEvidence(packet) : packet, preference.selectedVersion);
+  const index = createEvidenceIndex(masked ? maskEvidence(packet) : packet, preference.selectedVersion, asOf);
   const inventory = { total: packet.documents.length, extracted: 0, partial: 0, not_extracted: 0 };
   for (const doc of packet.documents) inventory[doc.extraction.status]++;
-  return { index, inventory, masked, actor, clientId, taxYear,
+  return { index, inventory, masked, asOf, actor, clientId, taxYear,
     rules: packet.engine_reference.rules as Record<string, string> };
 }
 export type EvidenceWorkspace = Awaited<ReturnType<typeof getEvidenceWorkspace>>;
+
+export async function optionalEvidenceWorkspace(...args:Parameters<typeof getEvidenceWorkspace>) {
+  try{return await getEvidenceWorkspace(...args);}catch(e){if(e instanceof HttpError&&e.status===409)return null;throw e;}
+}
 
 export async function recordEvidenceView(workspace: EvidenceWorkspace, ref: string) {
   // Authorize at the operation boundary too. Do not serve source content if the
@@ -51,7 +58,7 @@ export async function recordEvidenceView(workspace: EvidenceWorkspace, ref: stri
   assertStaff(workspace.actor); await authorizeEngagement(workspace.actor, workspace.clientId, workspace.taxYear);
   await db.insert(auditEvents).values({ actorId: workspace.actor.id, clientId: workspace.clientId, taxYear: workspace.taxYear,
     action: "evidence_viewed", target: ref, beforeJson: null,
-    afterJson: { reference: ref, version: workspace.index.version.version, asOf: DEFAULT_AS_OF, sensitiveIdentifiersMasked: workspace.masked } });
+    afterJson: { reference: ref, version: workspace.index.version.version, asOf: workspace.asOf, sensitiveIdentifiersMasked: workspace.masked } });
   const resolved = workspace.index.resolve(ref);
   const documentId = resolved.status !== 'resolved' ? null : resolved.kind === 'document' ? resolved.document.id : resolved.kind === 'page' ? resolved.documentId : resolved.kind === 'extracted_value' ? resolved.extraction.document_id : null;
   if (documentId && [...workspace.index.values.values()].some(value => value.document_id === documentId && isSensitiveValue(value))) {

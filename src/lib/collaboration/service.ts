@@ -6,11 +6,12 @@ import { db } from '../db/client';
 import { auditEvents, collaborationItems as items, collaborationMessages as messages, collaborationAttachments as attachments,
   collaborationNotifications as notifications, engagements, engagementAccess, identities, packetAuxiliary, sourceDocuments, sourceValues, workpaperIssues, salesLotReviews, timeEntries, firmStandards, type Actor } from '../db/schema';
 import { authorizeEngagement, assertStaff, HttpError } from '../auth/permissions';
-import { DEFAULT_AS_OF, type Packet, type PacketValue } from '../packet/schema';
+import { type Packet, type PacketValue } from '../packet/schema';
 import { availableClientEvidence } from '../packet/availability';
 import { getEvidenceWorkspace } from '../evidence/queries';
 import { parseReference } from '../evidence/references';
 import { engagementRedactor } from './privacy';
+import { readClock } from '../season/clock';
 import { ITEM_KINDS, type CollaborationData, type ItemView } from './types';
 
 type Item = typeof items.$inferSelect;
@@ -35,9 +36,11 @@ const invalidId = () => new HttpError(404,'Record not found or not shared with t
 const stamp = (value:Date|null) => value?.toISOString()??null;
 
 async function people(clientId:string,taxYear:number,executor:typeof db|Tx=db) {
+  const clockRows=await executor.execute(sql`SELECT as_of FROM season_clock WHERE client_id=${clientId} AND tax_year=${taxYear}`);
+  const asOf=clockRows.rows[0]?.as_of?new Date(String(clockRows.rows[0].as_of)).toISOString():'2026-06-23T06:05:00Z';
   return executor.select({id:identities.id,name:identities.name,role:identities.role}).from(identities)
     .innerJoin(engagementAccess,eq(engagementAccess.actorId,identities.id))
-    .where(and(eq(engagementAccess.clientId,clientId),eq(engagementAccess.taxYear,taxYear),lte(identities.activeFrom,DEFAULT_AS_OF.slice(0,10)))).orderBy(identities.id);
+    .where(and(eq(engagementAccess.clientId,clientId),eq(engagementAccess.taxYear,taxYear),lte(identities.activeFrom,asOf.slice(0,10)))).orderBy(identities.id);
 }
 async function audit(tx:Tx,actor:Actor,clientId:string,taxYear:number,action:string,target:string,before:unknown,after:unknown) {
   await tx.insert(auditEvents).values({actorId:actor.id,clientId,taxYear,action,target,beforeJson:before,afterJson:after});
@@ -129,7 +132,9 @@ export async function getCollaboration(actor:Actor,clientId:string,taxYear:numbe
   const lotRevisions=actor.role==='client'?[]:await db.select({key:salesLotReviews.lineKey,version:salesLotReviews.version,revision:salesLotReviews.revision}).from(salesLotReviews).where(and(eq(salesLotReviews.clientId,clientId),eq(salesLotReviews.taxYear,taxYear))).orderBy(salesLotReviews.version,salesLotReviews.lineKey);
   const ownTime=actor.role==='client'?[]:await db.select({id:timeEntries.id}).from(timeEntries).where(and(eq(timeEntries.clientId,clientId),eq(timeEntries.taxYear,taxYear),eq(timeEntries.actorId,actor.id))).orderBy(timeEntries.id);
   const standardRevisions=actor.role==='client'?[]:await db.select({revision:firmStandards.revision}).from(firmStandards).where(eq(firmStandards.packetHash,engagement[0].packetHash));
-  const cursor=createHash('sha256').update(JSON.stringify({views,notices,issueRevisions,lotRevisions,ownTime,standardRevisions})).digest('hex');
+  const clock=await readClock(clientId,taxYear);
+  const filingRevisions=await db.execute(sql`SELECT id,revision,status FROM filing_simulation WHERE client_id=${clientId} AND tax_year=${taxYear} ORDER BY id`);
+  const cursor=createHash('sha256').update(JSON.stringify({clock,filingRevisions:filingRevisions.rows,views,notices,issueRevisions,lotRevisions,ownTime,standardRevisions})).digest('hex');
   return {items:matched,people:allPeople,notifications:notices,
     deadlines:supplied.deadlines.filter(d=>actor.role!=='client'||!d.what.startsWith('Internal:')),
     assignments:actor.role==='client'?[]:Object.entries(supplied.assignment_at_start).map(([role,actorId])=>({role,actorId})),
@@ -147,6 +152,7 @@ export async function collaborationCommand(actor:Actor,clientId:string,taxYear:n
   const c=parsed.data;
   if(c.action==='read_notification') {
     return db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${clientId}:${taxYear}`},0))`);
       const [row]=await tx.select({notification:notifications}).from(notifications).innerJoin(items,eq(items.id,notifications.itemId))
         .where(and(eq(notifications.id,c.id),eq(notifications.recipientId,actor.id),visibleScope(actor,clientId,taxYear))).limit(1).for('update');
       if(!row)throw invalidId();
@@ -167,6 +173,7 @@ export async function collaborationCommand(actor:Actor,clientId:string,taxYear:n
     await assertSources(actor,clientId,taxYear,c.sourceRefs,c.audience);
     await protectedWrite(actor,clientId,taxYear,{title:c.title,body:c.body});
     const row=await db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${clientId}:${taxYear}`},0))`);
       const [created]=await tx.insert(items).values({id:randomUUID(),clientId,taxYear,kind:c.kind,audience:c.audience,title:c.title,body:c.body,
         sourceRefs:[...new Set(c.sourceRefs)],assigneeId:c.assigneeId,dueDate:c.dueDate,blocksFiling:c.kind==='review_note',createdBy:actor.id,updatedBy:actor.id}).returning();
       await audit(tx,actor,clientId,taxYear,'collaboration_created',created.id,null,created);await notify(tx,actor,created,'created');return created;
@@ -198,6 +205,7 @@ export async function collaborationCommand(actor:Actor,clientId:string,taxYear:n
     if(actor.role!=='client')await protectedWrite(actor,clientId,taxYear,c.body);
   }
   await db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${clientId}:${taxYear}`},0))`);
     const before=await getRow(actor,clientId,taxYear,c.id,tx,true);assertRevision(before,c.expectedRevision);
     if(c.action==='reply'&&before.status==='closed')throw new HttpError(409,'This thread was closed in another window.');
     if(c.action==='update') {
@@ -228,6 +236,7 @@ export async function addAttachment(actor:Actor,clientId:string,taxYear:number,i
   if(actor.role!=='client')await protectedWrite(actor,clientId,taxYear,{name:c.name,note:c.note});
   const id=randomUUID();const content=c.kind==='file'?file!.bytes:Buffer.from(c.note!,'utf8');
   await db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${clientId}:${taxYear}`},0))`);
     const before=await getRow(actor,clientId,taxYear,c.itemId,tx,true);assertRevision(before,c.expectedRevision);
     if(before.status==='closed')throw new HttpError(409,'Reopen the thread before attaching evidence.');
     await tx.insert(attachments).values({id,itemId:c.itemId,kind:c.kind,name:c.name,note:c.kind==='note'?c.note:null,content:c.kind==='file'?file!.bytes:null,
@@ -272,6 +281,7 @@ export async function sharedSource(actor:Actor,clientId:string,taxYear:number,it
   if(/^(answer|attachment):/u.test(ref))return getCollaborationEvidence(actor,clientId,taxYear,ref);
   // Clients cannot enter the general evidence resolver. A shared source has a
   // tightly limited, masked projection and no reverse usage or internal trace.
+  const {asOf}=await readClock(clientId,taxYear);
   const parsed=parseReference(ref);if(!parsed)throw invalidId();
   const [engagement]=await db.select().from(engagements).where(and(eq(engagements.clientId,clientId),eq(engagements.taxYear,taxYear))).limit(1);
   const redact=await engagementRedactor(clientId,taxYear);
@@ -283,17 +293,17 @@ export async function sharedSource(actor:Actor,clientId:string,taxYear:number,it
       const [value]=await db.select().from(sourceValues).where(and(eq(sourceValues.packetHash,engagement.packetHash),eq(sourceValues.valueId,parsed.id))).limit(1);
       if(!value)throw invalidId();extraction=value.record as PacketValue;documentId=extraction.document_id;pageNumber=extraction.page;
     }
-    const [document]=await db.select().from(sourceDocuments).where(and(eq(sourceDocuments.packetHash,engagement.packetHash),eq(sourceDocuments.documentId,documentId),lte(sourceDocuments.receivedAt,new Date(DEFAULT_AS_OF)))).limit(1);
+    const [document]=await db.select().from(sourceDocuments).where(and(eq(sourceDocuments.packetHash,engagement.packetHash),eq(sourceDocuments.documentId,documentId),lte(sourceDocuments.receivedAt,new Date(asOf)))).limit(1);
     const page=document?.record.pages.find(p=>p.page===pageNumber);if(!page)throw invalidId();
     label=document.record.title;record=extraction?{pipelineReading:extraction,printedPage:page}:page;
   } else if(parsed.kind==='questionnaire'||parsed.kind==='message') {
     const [aux]=await db.select().from(packetAuxiliary).where(and(eq(packetAuxiliary.packetHash,engagement.packetHash),eq(packetAuxiliary.section,'client'))).limit(1);
-    const evidence=availableClientEvidence(aux.record as Packet['client']);
+    const evidence=availableClientEvidence(aux.record as Packet['client'],asOf);
     record=(parsed.kind==='questionnaire'?evidence.questionnaire:evidence.messages).find(r=>r.id===parsed.id);if(!record)throw invalidId();
   } else if(actor.role!=='client') {
     const workspace=await getEvidenceWorkspace(actor,clientId,taxYear);const result=workspace.index.resolve(ref);if(result.status!=='resolved')throw invalidId();label=result.label;record={label,ref};
   } else throw invalidId();
-  await db.insert(auditEvents).values({actorId:actor.id,clientId,taxYear,action:'shared_source_viewed',target:ref,beforeJson:null,afterJson:{itemId,masked:true,asOf:DEFAULT_AS_OF}});
+  await db.insert(auditEvents).values({actorId:actor.id,clientId,taxYear,action:'shared_source_viewed',target:ref,beforeJson:null,afterJson:{itemId,masked:true,asOf}});
   return {ref,label:redact(label),record:redact(record),masked:true};
 }
 

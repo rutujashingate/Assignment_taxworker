@@ -1,7 +1,8 @@
+import { SourceDateUnavailable } from "@/components/source-date-unavailable";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentActor } from "@/lib/auth/session";
-import { getEvidenceWorkspace, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
+import { optionalEvidenceWorkspace as getEvidenceWorkspace, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
 import { evidenceHref, lineValue } from "@/lib/evidence/format";
 import { EvidenceInspector } from "@/components/evidence-inspector";
 import { StagePlaceholder } from "@/components/stage-placeholder";
@@ -14,6 +15,7 @@ export default async function Return({ params, searchParams }: {
   if (actor.role === "client") return <StagePlaceholder title="Tax Return" phase={2} description="Return review is available to staff."/>;
   const [{ clientId, taxYear }, search] = await Promise.all([params, searchParams]);
   const workspace = await getEvidenceWorkspace(actor, clientId, Number(taxYear));
+  if(!workspace)return <SourceDateUnavailable/>;
   const base = `/engagements/${clientId}/${taxYear}`;
   const q = typeof search.q === "string" ? search.q.slice(0,200) : "";
   const form = typeof search.form === "string" ? search.form : "all";

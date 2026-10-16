@@ -1,8 +1,9 @@
+import { SourceDateUnavailable } from "@/components/source-date-unavailable";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { currentActor } from "@/lib/auth/session";
 import { HttpError } from "@/lib/auth/permissions";
-import { getEvidenceWorkspace, documentView, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
+import { optionalEvidenceWorkspace as getEvidenceWorkspace, documentView, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
 import { documentHref } from "@/lib/evidence/format";
 import { pageReference } from "@/lib/evidence/references";
 import { DocumentPage } from "@/components/document-page";
@@ -16,6 +17,7 @@ export default async function Document({ params, searchParams }: {
   if (actor.role === "client") return <StagePlaceholder title="Documents" phase={2} description="Source review is available to staff."/>;
   const [{ clientId, taxYear, documentId }, search] = await Promise.all([params, searchParams]);
   const workspace = await getEvidenceWorkspace(actor, clientId, Number(taxYear));
+  if(!workspace)return <SourceDateUnavailable/>;
   if (search.page !== undefined && (typeof search.page !== "string" || !/^[1-9]\d*$/u.test(search.page))) notFound();
   let document;
   try { document = documentView(workspace.index, documentId, Number(search.page ?? "1")); }

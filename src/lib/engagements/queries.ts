@@ -3,18 +3,20 @@ import { and, eq, lte, count, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { engagements, engagementAccess, engineVersions, sourceDocuments, sourceValues, engineLines, packetImports, type Actor } from "../db/schema";
 import { assertActive, assertStaff, authorizeEngagement, HttpError } from "../auth/permissions";
-import { DEFAULT_AS_OF } from "../packet/schema";
+import { readClock } from "../season/clock";
 
 export async function getEngagement(actor: Actor, clientId: string, taxYear: number) {
   await authorizeEngagement(actor, clientId, taxYear);
   const [engagement] = await db.select().from(engagements).where(and(eq(engagements.clientId, clientId), eq(engagements.taxYear, taxYear))).limit(1);
   if (!engagement) throw new HttpError(404, "Engagement not found.");
+  const {asOf}=await readClock(clientId,taxYear);
+  const available=await db.select({version:engineVersions.version}).from(engineVersions).where(and(eq(engineVersions.packetHash,engagement.packetHash),lte(engineVersions.computedAt,new Date(asOf)))).orderBy(engineVersions.version);
   // Deliberate allow-list: no raw packet, identities, source fields, or notes.
   return { clientId: engagement.clientId, taxYear: engagement.taxYear, name: engagement.name,
-    jurisdictions: ["Federal", "California"], computedVersion: "v3", readiness: "Review not evaluated" };
+    jurisdictions: ["Federal", "California"], asOf, computedVersion: available.at(-1)?.version??"Not computed yet", readiness: "Review not evaluated" };
 }
 export async function searchEngagements(actor: Actor, query = "") {
-  assertStaff(actor); assertActive(actor);
+  assertStaff(actor); await assertActive(actor);
   const rows = await db.select({ clientId: engagements.clientId, taxYear: engagements.taxYear, name: engagements.name })
     .from(engagements).innerJoin(engagementAccess, and(eq(engagementAccess.clientId, engagements.clientId), eq(engagementAccess.taxYear, engagements.taxYear)))
     .where(eq(engagementAccess.actorId, actor.id));
@@ -28,10 +30,11 @@ export async function engagementStatistics(actor: Actor, clientId: string, taxYe
   const [engagement] = await db.select().from(engagements).where(and(eq(engagements.clientId, clientId), eq(engagements.taxYear, taxYear))).limit(1);
   if (!engagement) throw new HttpError(404, "Engagement not found.");
   const hash = engagement.packetHash;
+  const {asOf}=await readClock(clientId,taxYear);
   const [documents, lines, versions] = await Promise.all([
-    db.select({ count: count() }).from(sourceDocuments).where(and(eq(sourceDocuments.packetHash, hash), lte(sourceDocuments.receivedAt, new Date(DEFAULT_AS_OF)))),
+    db.select({ count: count() }).from(sourceDocuments).where(and(eq(sourceDocuments.packetHash, hash), lte(sourceDocuments.receivedAt, new Date(asOf)))),
     db.select({ count: count() }).from(engineLines).where(and(eq(engineLines.packetHash, hash), eq(engineLines.version, version))),
-    db.select({ version: engineVersions.version, computedAt: engineVersions.computedAt }).from(engineVersions).where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(DEFAULT_AS_OF)))).orderBy(engineVersions.version),
+    db.select({ version: engineVersions.version, computedAt: engineVersions.computedAt }).from(engineVersions).where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(asOf)))).orderBy(engineVersions.version),
   ]);
   return { documentCount: documents[0].count, lineCount: lines[0].count, versions: versions.map(x => ({ version: x.version, computedAt: x.computedAt.toISOString() })) };
 }
@@ -42,13 +45,14 @@ export async function getImportStatus(actor: Actor, clientId: string, taxYear: n
     .where(and(eq(engagements.clientId, clientId), eq(engagements.taxYear, taxYear))).limit(1);
   if (!engagement) throw new HttpError(404, "Engagement not found.");
   const hash = engagement.packetHash;
+  const {asOf}=await readClock(clientId,taxYear);
   // Staff-only import metadata. Neither original bytes nor source fields leave the server.
   const [imports, documents, values, versions] = await Promise.all([
     db.select({ importedAt: packetImports.importedAt, byteLength: sql<number>`octet_length(${packetImports.rawBytes})` }).from(packetImports).where(eq(packetImports.packetHash, hash)),
     db.select({ count: count(), pages: sql<number>`coalesce(sum(jsonb_array_length(${sourceDocuments.record}->'pages')), 0)`.mapWith(Number) }).from(sourceDocuments).where(eq(sourceDocuments.packetHash, hash)),
     db.select({ count: count() }).from(sourceValues).where(eq(sourceValues.packetHash, hash)),
     db.select({ version: engineVersions.version, computedAt: engineVersions.computedAt }).from(engineVersions)
-      .where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(DEFAULT_AS_OF)))).orderBy(engineVersions.version),
+      .where(and(eq(engineVersions.packetHash, hash), lte(engineVersions.computedAt, new Date(asOf)))).orderBy(engineVersions.version),
   ]);
   if (!imports[0]) throw new HttpError(404, "Packet import not found.");
   return { packetHash: hash, importedAt: imports[0].importedAt.toISOString(), byteLength: imports[0].byteLength,

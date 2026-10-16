@@ -53,7 +53,7 @@ describe("server authorization and sessions", () => {
       const person = await actor(id);
       expect(Object.keys(publicIdentity(person)).sort()).toEqual(["id","name","role"]);
       const summary = await getEngagement(person, "CL-20417", 2025);
-      expect(Object.keys(summary).sort()).toEqual(["clientId","computedVersion","jurisdictions","name","readiness","taxYear"]);
+      expect(Object.keys(summary).sort()).toEqual(["asOf","clientId","computedVersion","jurisdictions","name","readiness","taxYear"]);
       expect(JSON.stringify(summary)).not.toMatch(/ssn|ip_pin|bank_account|signing_key|raw_json|internal_note/);
     }
   });

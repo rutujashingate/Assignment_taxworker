@@ -1,6 +1,6 @@
-# Miraflores Workpaper — Phase 6
+# Miraflores Workpaper — Phase 7
 
-A persistent workpaper for the one supplied Okafor–Lindqvist 2025 engagement. CPA Records provides 15 tax-area views with the existing Evidence Inspector, a virtualized sales browser and review overlay. Firm search, standards, audit-log metadata, actual work-time entry and requirement coverage are available. Review Desk and collaboration remain intact. Phase 4 tax corrections/sign-offs and Phase 7 filing are not built yet.
+A persistent workpaper for the one supplied Okafor–Lindqvist 2025 engagement. CPA Records provides 15 tax-area views with the existing Evidence Inspector, a virtualized sales browser and review overlay. Firm search, standards, audit-log metadata, actual work-time entry and requirement coverage are available. Review Desk and collaboration remain intact. History & Scenarios now compares v1/v2/v3, the five supplied alternatives, and a non-destructive season replay. Filing, amendments and exports are explicitly simulated. Phase 4 tax corrections/verification/production sign-offs remain unbuilt.
 
 ## Run locally
 
@@ -39,7 +39,7 @@ The resolver additionally supports `computed:v3:/carryovers_out/...` (immutable 
 
 Open **Workflow** as Priya. Expand **Create a question, thread, task or review note**, click **Use real D64 donation question**, then **Create record**. This asks for confirmation of an actually ambiguous source; it does not assert a new tax fact. Switch to Ngozi (`cu-01`) to answer and attach evidence; switch back to Priya to see the dated answer, author and source links. Both supplied taxpayers share client-visible conversations. Internal threads and review notes are excluded from client responses, direct URLs, search, attachments and notification cursors.
 
-As Daniel (`st-02`) or Helen (`st-03`), create an **internal review note**. An open note blocks the server-side review-note filing gate. Only reviewer/partner roles may close it, with a reason; preparers can reply. The gate does not mean other filing requirements have passed, and no filing operation exists yet. Tasks and conversation metadata support persisted assignments and due dates. The six supplied deadlines and starting preparer/reviewer/partner assignments are displayed separately from new tasks.
+As Daniel (`st-02`) or Helen (`st-03`), create an **internal review note**. An open note blocks the server-side review-note filing gate. Only reviewer/partner roles may close it, with a reason; preparers can reply. The gate does not mean other filing requirements have passed, and the separate Phase 7 simulation also enforces this gate. Tasks and conversation metadata support persisted assignments and due dates. The six supplied deadlines and starting preparer/reviewer/partner assignments are displayed separately from new tasks.
 
 Attachments are retained in PostgreSQL, with SHA-256 checksums, rather than browser storage or a temporary server directory. Files support text, CSV, PDF, PNG and JPEG, up to 2 MiB each, and are served as downloads with authorization and view audit. Firm staff need sensitive-data clearance to upload/download files; both taxpayers may upload/download their explicitly shared attachments. Text notes are masked when serialized. New attachments are workpaper evidence, never fabricated original packet documents or OCR results.
 
@@ -86,7 +86,7 @@ npm run test:e2e
 - The typed resolver follows actual `inputs` and `sources`, handles all supplied reference families and RFC 6901 escaping, indexes direct and downstream usage, and returns explicit missing sources, cycles and display-limit states. Six prior-asset provenance labels remain unresolved. Field highlights require a unique literal reading tied to a printed label; uncertain matches stay at page level.
 - Viewing preferences are per identity and engagement. Writes validate an expected revision, serialize competing changes and commit exactly one audit event with the update. A stale write returns 409.
 - Independent findings and triage live in `workpaper_issue`, separately from original packet/engine records. First access creates missing findings with audit events; repeat checks preserve status unless the finding itself changes. Triage writes serialize competing changes, validate role/scope/version/assignee/evidence, and commit the update and audit atomically. Administrators can inspect tax findings; tax-review roles save dispositions. Clients cannot read internal findings or notes through APIs or pages.
-- Engine versions and original values are immutable. No tax engine is rerun; no filing, signature or external integration is claimed.
+- Engine versions and original values are immutable. No tax engine is rerun; no real filing, regulated signature or external integration is claimed.
 
 Application source, runtime data, database migrations, scripts and tests live in the repository root. The original plans, prompts and assignment PDF remain in the ignored `Miraflores_Codex_Product_Engineering_Bundle/` reference folder.
 
@@ -95,3 +95,22 @@ See the original [data inventory](docs/DATA_INVENTORY.md), [Phase 1 report](docs
 ## Documentation consulted
 
 Current documentation was fetched with Context7 for [Next.js server authentication](https://nextjs.org/docs/app/guides/authentication), [Drizzle transactions](https://orm.drizzle.team/docs/transactions), [Tailwind's PostCSS installation](https://tailwindcss.com/docs/installation/using-postcss), [Zod](https://zod.dev/api), [Vitest configuration](https://vitest.dev/config/) and [Playwright web servers](https://playwright.dev/docs/test-webserver).
+
+## Phase 7: history, replay and simulated filing
+
+Open **History & Scenarios**. Compare immutable v1/v2/v3 metadata and per-line differences. Each of the five named scenarios displays its exact supplied `what_if.alternatives` result in isolation. The custom calculator uses only supplied per-dollar rates and changes no live state.
+
+Daniel (`st-02`) and Helen (`st-03`) can move the shared season clock through all 29 supplied events or reset to v3 **2026-06-23T06:05:00Z**. Direct evidence/search/client-source APIs and exports use the same availability rules. D71 appears at `tl-22`; D72 appears at `tl-29`. Early dates show no computed return until March 4. Source records and original engine outputs never change. Human decisions keep actual timestamps. Later-dated simulation rows remain saved but are withheld when replay rewinds before their recorded source dates.
+
+For a complete demonstration:
+
+1. As Daniel, replay through `tl-20` (July 10 approval). As Priya, create a filing simulation.
+2. Enter a reason for every evidenced simulation exception, optionally add separate modeled line changes with supplied rate categories, acknowledge the accuracy limitations, and save. Exceptions do **not** resolve Review Desk findings.
+3. Switch to Daniel and Helen separately and approve the simulation in each role. The creator cannot approve their own work. As a taxpayer in **Workflow**, review original v3 amounts and separate estimates, then **Approve & authorize simulation**. Alternatively, a reviewer can explicitly link the now-available scripted `msg-09` authorization. Neither path is a regulated signature.
+4. As Priya, submit the simulation. Open blocking review notes cannot be waived. Changes to modeled assumptions, review dispositions, lot reviews, firm standards, collaboration evidence or newly available packet evidence invalidate approvals.
+5. Replay `tl-21`, then process the scripted response: federal **R0000-504-02**, California held. At `tl-22`, link D71's printed/extracted dependent-ID correction as a separate overlay; the original household entry remains unchanged. Renew approvals and resubmit.
+6. At `tl-23`, process federal acceptance; the snapshot freezes. At `tl-24`, process California acceptance against that exact frozen snapshot. Server operations and database triggers reject edits. Later California acknowledgment does not replace the federally accepted proposal with a current workpaper view.
+7. Create an amendment branch from an available accepted snapshot. Its modeled changes and numeric diff are independent of the parent. No amended-return acknowledgments are supplied, so original-return responses cannot be reused for amendments.
+8. Download the masked client HTML. At `tl-29`, download the **self-contained offline Letter 566 evidence HTML**, containing printed pages, distinct unverified pipeline readings, dated answers, charity/receipts reconciliation and explicit substantiation gaps. It includes no external resources or scripts and is never sent to the IRS.
+
+The readiness result is **simulation readiness**, not production tax readiness. Phase 4 verification, accurate corrections and production sign-offs do not exist. Explicit acknowledgment and evidence-backed exceptions let an evaluator exercise the scripted lifecycle while preserving this limitation. No engine re-execution or accurate final filed liability is claimed. See `docs/PHASE_7_VALIDATION.md` for actual verification and the source-byte discrepancy found at the start of this phase.

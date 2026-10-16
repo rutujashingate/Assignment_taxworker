@@ -1,8 +1,9 @@
+import { SourceDateUnavailable } from "@/components/source-date-unavailable";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentActor } from "@/lib/auth/session";
 import { getImportStatus } from "@/lib/engagements/queries";
-import { getEvidenceWorkspace, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
+import { optionalEvidenceWorkspace as getEvidenceWorkspace, inspectEvidence, recordEvidenceView } from "@/lib/evidence/queries";
 import { getReviewDesk, filterIssues } from "@/lib/review/issues";
 import { AREA_LABELS, ISSUE_STATES, STATE_LABELS } from "@/lib/review/types";
 import { EvidenceInspector } from "@/components/evidence-inspector";
@@ -26,6 +27,7 @@ export default async function Review({ params,searchParams }: { params: Promise<
   if (actor.role === "client") return <StagePlaceholder title="Review Desk" phase={3} description="Independent checks are planned for Phase 3."/>;
   const [{ clientId, taxYear },search] = await Promise.all([params,searchParams]);
   const [workspace,status]=await Promise.all([getEvidenceWorkspace(actor,clientId,Number(taxYear)),getImportStatus(actor,clientId,Number(taxYear))]);
+  if(!workspace)return <SourceDateUnavailable/>;
   const desk=await getReviewDesk(workspace);
   const filters={status:typeof search.status==="string"?search.status:"all",blocker:typeof search.blocker==="string"?search.blocker:"all",area:typeof search.area==="string"?search.area:"all",assignee:typeof search.assignee==="string"?search.assignee:"all"};
   const issues=filterIssues(desk.issues,filters).sort((a,b)=>Number(b.finding.severity==="blocking")-Number(a.finding.severity==="blocking")||a.key.localeCompare(b.key));
@@ -70,7 +72,7 @@ export default async function Review({ params,searchParams }: { params: Promise<
     <details className="panel engine-diagnostics"><summary>Supplied engine diagnostics ({desk.diagnostics.length}) · separate from independent checks</summary><p>These are unmodified pipeline messages. They are not counted as independent findings and have no triage state here.</p>{desk.diagnostics.map(diagnostic=><div key={diagnostic.code}><h3>{diagnostic.code} · {diagnostic.severity}</h3><p>{diagnostic.message}</p><ul className="reference-list">{diagnostic.refs.map(ref=><li key={ref}><Link prefetch={false} href={selected?issueHref(selected.key,ref):`${base}/return?ref=${encodeURIComponent(ref)}`}>{ref}</Link></li>)}</ul></div>)}</details>
     <details className="panel import-details review-import-details" open>
       <summary>Packet import details</summary>
-      <p>Full delivered packet totals are shown below. The workpaper uses June 23, 2026 availability; the header counts only documents available at that date. Future source contents remain withheld.</p>
+      <p>Full delivered packet totals are shown below. The workpaper follows the selected season clock; the header counts only documents available at that date. Future source contents remain withheld.</p>
       <dl className="import-metrics">
         <div><dt>Imported documents</dt><dd>{status.documentCount}</dd></div>
         <div><dt>Source pages</dt><dd>{status.pageCount}</dd></div>

@@ -23,7 +23,8 @@ export function VersionPicker({ clientId, taxYear, initial, versions }: {
   }
   return <div className="version-picker">
     <label htmlFor="computed-version">Computed version</label>
-    <select id="computed-version" value={preference.selectedVersion} disabled={saving || Boolean(error)} onChange={event => void save(event.target.value)}>
+    <select id="computed-version" value={preference.selectedVersion} disabled={saving || Boolean(error) || !versions.length} onChange={event => void save(event.target.value)}>
+      {!versions.length&&<option value="none">Not computed yet</option>}
       {versions.map(version => <option key={version.version} value={version.version}>{version.version}{version.version === "v3" ? " · latest" : " · historical"}</option>)}
     </select>
     <span className="save-status" role="status">{saving ? "Saving…" : preference.revision ? `Saved · revision ${preference.revision}` : "Default view · choose a version to save"}</span>

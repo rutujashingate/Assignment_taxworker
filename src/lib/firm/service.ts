@@ -29,6 +29,7 @@ export async function updateStandards(actor:Actor,input:unknown) {
   const c=parsed.data;const before=await getStandards(actor);const redact=await engagementRedactor(engagement.clientId,engagement.taxYear);
   if(JSON.stringify(redact(c))!==JSON.stringify(c))throw new HttpError(400,'Policy text must not contain taxpayer identifiers.');
   return db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${engagement.clientId}:${engagement.taxYear}`},0))`);
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`standards:${engagement.packetHash}`},0))`);
     const [current]=await tx.select().from(firmStandards).where(eq(firmStandards.packetHash,engagement.packetHash)).limit(1);
     if((current?.revision??0)!==c.expectedRevision)throw new HttpError(409,'Firm standards changed. Reload before saving.');

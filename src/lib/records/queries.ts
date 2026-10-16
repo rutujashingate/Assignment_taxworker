@@ -35,6 +35,7 @@ export async function bulkReviewLots(actor:Actor,clientId:string,taxYear:number,
   for(const item of c.items)if(!available.has(item.key))throw new HttpError(400,'Every selected key must be an actual computed lot in this version.');
   const redact=await engagementRedactor(clientId,taxYear);if(!actor.sensitiveDataClearance&&redact(c.reason)!==c.reason)throw new HttpError(403,'A cleared reviewer must enter protected identifiers.');
   await db.transaction(async tx=>{
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season:${clientId}:${taxYear}`},0))`);
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`lots:${clientId}:${taxYear}:${c.version}`},0))`);
     const current=await tx.select().from(salesLotReviews).where(and(eq(salesLotReviews.clientId,clientId),eq(salesLotReviews.taxYear,taxYear),eq(salesLotReviews.version,c.version)));
     const byKey=new Map(current.map(row=>[row.lineKey,row]));
