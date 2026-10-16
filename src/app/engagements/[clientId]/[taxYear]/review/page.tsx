@@ -30,6 +30,16 @@ export default async function Review({ params,searchParams }: { params: Promise<
   const attention=desk.issues.filter(needsAttention),waiting=attention.filter(i=>i.status==='waiting');
   const passes=desk.checks.filter(c=>c.outcome==='pass'),filtered=Object.values(filters).some(value=>value!=='all');
   const view=selected?issuePresentation(selected.finding):null;
+  function reviewAmount(text:string,kind:'reported'|'supported'|'difference'){
+    if(!selected||!/^[-]?\$?[\d,]+(?:\.\d+)?(?: miles)?$/u.test(text))return text;
+    const value=Number(text.replaceAll('$','').replaceAll(',','').replace(' miles',''));
+    // Only an existing finding reference can be a destination. Reconciled totals
+    // without a single source value open the comparison instead of a false field.
+    const refs=kind==='reported'?selected.finding.inputRefs.map(ref=>workspace!.index.resolve(ref)):[];
+    const target=refs.find(r=>r.status==='resolved'&&r.kind==='line'&&r.line.value===value)??refs.find(r=>r.status==='resolved'&&r.kind==='extracted_value'&&r.extraction.value===value);
+    const href=target?issueHref(selected.key,target.ref):`${issueHref(selected.key).split('#')[0]}#review-evidence`;
+    return <Link prefetch={false} className="amount-link" href={href} aria-label={`Inspect ${kind} value`} title={target?'Inspect the linked return amount or source reading':'Compare the supporting records for this figure'}>{text} <span aria-hidden="true">↗</span></Link>;
+  }
   const guidance=selected?reviewGuidance(selected.finding):null;
   const following=recommendIssue(issues.filter(i=>i.key!==selected?.key),actor.id);
   const evidenceLabels=Object.fromEntries((selected?.finding.inputRefs??[]).map(ref=>{
@@ -64,7 +74,7 @@ export default async function Review({ params,searchParams }: { params: Promise<
       <div className="review-detail-column">
         {selected&&view&&guidance&&<section id="selected-finding" className="panel selected-finding" aria-labelledby="finding-title"><header className="issue-detail-heading"><span>{AREA_LABELS[selected.finding.taxArea]}</span><span className="status-label neutral">{STATE_LABELS[selected.status]}</span></header><h3 id="finding-title">{view.title}</h3>
           <h4 className="review-step-heading"><span>1</span> Check the difference</h4><p className="finding-explanation">{guidance.summary}</p>
-          <dl className="discrepancy-summary"><div><dt>Reported value</dt><dd>{view.reported}</dd></div><div><dt>Supported value</dt><dd>{view.supported}</dd></div><div><dt>Difference to review</dt><dd>{view.difference}</dd></div></dl>
+          <dl className="discrepancy-summary"><div><dt>Reported value</dt><dd>{reviewAmount(view.reported,'reported')}</dd></div><div><dt>Supported value</dt><dd>{reviewAmount(view.supported,'supported')}</dd></div><div><dt>Difference to review</dt><dd>{reviewAmount(view.difference,'difference')}</dd></div></dl>
           <p className="issue-qualification">{view.qualification}</p>
           <section id="review-evidence" className="issue-evidence" aria-label="Supporting source evidence"><h4 className="review-step-heading"><span>2</span> Compare the evidence</h4><ol className="review-checklist">{guidance.steps.map(step=><li key={step}>{step}</li>)}</ol><Link prefetch={false} className="button secondary" href={issueHref(selected.key,selected.finding.action.ref)}>View source evidence</Link><ul className="source-cards">{[...sources].map(([ref,source])=><li key={ref}><Link prefetch={false} href={issueHref(selected.key,ref)}><span>{source.id} · Page {source.page}</span><strong>{source.title}</strong><span className="source-open">Open source →</span></Link></li>)}</ul>{otherSources.length>0&&<ul className="additional-evidence">{otherSources.map(ref=><li key={ref}><Link prefetch={false} href={issueHref(selected.key,ref)}>{evidenceLabels[ref]}</Link></li>)}</ul>}</section>
           {inspection&&<section className="review-open-evidence"><EvidenceInspector inspection={inspection} base={base} masked={workspace.masked} compact closeHref={`${issueHref(selected.key).split('#')[0]}#review-evidence`} referenceHref={ref=>issueHref(selected.key,ref)}/></section>}

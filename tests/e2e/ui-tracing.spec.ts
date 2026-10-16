@@ -57,3 +57,16 @@ test('E04 R06: sale proceeds and basis amounts open their own real source fields
   await page.goto(`${base}/records/sales`);await page.getByRole('link',{name:`Inspect gain for lot ${lot.id}`,exact:true}).click();await expect(page.locator('.inspector-ref')).toHaveText(lot.key);
   await page.goto(`${base}/records/sales?lot=F8949.H.C6`);await expect(page.getByRole('region',{name:'Selected lot details',exact:true})).toContainText('Not supplied · evidence gap');
 });
+
+test('Review figures open their actual return/extraction reference or the complete source comparison',async({page})=>{
+  await enter(page);
+  for(const [issue,ref,amount] of [['CA_PAYMENT_YEAR:D68','F540NR.72','14,000'],['CARD_RECEIPTS_OVERLAP:D14+D15+D21','SchC.1','163,700'],['MILEAGE_DUPLICATE_PAGES:D23','SchC.44a','11,800']]){
+    await page.goto(`${base}/review?${new URLSearchParams({issue})}`);await page.getByRole('link',{name:'Inspect reported value',exact:true}).click();
+    await expect(page.locator('.inspector-ref')).toHaveText(ref);await expect(page.locator('.inspector-amount')).toBeVisible();await expect(page.locator('.inspector-amount')).toContainText(amount);
+  }
+  await page.goto(`${base}/review?issue=CHARITY_AMOUNT_UNCLEAR%3AD64`);await page.getByRole('link',{name:'Inspect reported value',exact:true}).click();await expect(page.getByTestId('printed-content')).toContainText('$?,500.00');await expect(page.locator('.printed-selection')).toHaveCount(0);
+  await expect(page.getByRole('link',{name:'Inspect supported value',exact:true})).toHaveCount(0);await expect(page.getByRole('link',{name:'Inspect difference value',exact:true})).toHaveCount(0);
+  await page.goto(`${base}/review?issue=INTEREST_SWEEP_OVERLAP%3AD28%2BD29`);await page.getByRole('link',{name:'Inspect reported value',exact:true}).click();await expect(page).toHaveURL(/#review-evidence$/u);
+  const comparison=page.getByRole('region',{name:'Supporting source evidence',exact:true});await expect(comparison).toContainText('D28');await expect(comparison).toContainText('D29');
+  await expect(page.locator('#evidence-inspector')).toHaveCount(0);
+});
