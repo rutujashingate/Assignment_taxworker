@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { DocumentView } from "@/lib/evidence/queries";
 import { displayValue } from "@/lib/evidence/format";
 import { locatePrintedField, printedFields } from "@/lib/evidence/printed-fields";
+import { SourceFieldFocus } from "./source-field-focus";
 
 function TaxFormTemplate({ children, type }: { children: ReactNode; type: string }) {
   return <article className="source-sheet tax-form-template"><div className="source-template-label">INFORMATION RETURN <span>{type}</span></div>{children}</article>;
@@ -25,7 +26,7 @@ export function DocumentPage({ document, selectedField, fieldHref, masked, compa
   for (const { value, location } of located) {
     if (location.status !== "matched") continue;
     fragments.push(document.page.printed_content.slice(offset, location.start));
-    const field = <Link prefetch={false} href={fieldHref(value.id)} aria-label={`Inspect ${value.id} · ${String(value.label ?? value.field)}`} title="Inspect this field and see where it is used in the return" data-testid={`printed-field-${value.id}`}>{location.text}</Link>;
+    const field = <Link prefetch={false} href={fieldHref(value.id)} id={compact&&selectedField===value.id?`source-selection-${value.id}`:undefined} aria-label={`Inspect ${value.id} · ${String(value.label ?? value.field)}`} title="Inspect this field and see where it is used in the return" data-testid={`printed-field-${value.id}`}>{location.text}</Link>;
     fragments.push(selectedField === value.id ? <mark key={value.id} className="printed-selection">{field}</mark> : <span key={value.id} className="printed-field">{field}</span>);
     offset = location.end;
   }
@@ -35,7 +36,8 @@ export function DocumentPage({ document, selectedField, fieldHref, masked, compa
     <div className="printed-content" data-testid="printed-content">{fragments}</div>
     <p className="source-caption">Printed content from the supplied packet{masked ? "; sensitive identifiers masked" : ""}. Select a linked field to see where it is used in the return.</p>
   </>;
-  return <section className="document-renderer" aria-label={`${document.id} page ${document.page.page}`}>
+  return <section className="document-renderer" aria-label={`${document.id} page ${document.page.page}`} id={compact&&selectedField?'source-page-selection':undefined} tabIndex={compact&&selectedField?-1:undefined}>
+    {compact&&selectedField&&<SourceFieldFocus reference={selectedField}/>}
     <div className="source-disclaimer"><strong>Simulated source document</strong><span>Rendered from packet text. No original page image or PDF coordinates are available. Synthetic positions are not used.</span></div>
     {document.type === "W-2" || /^1099-/u.test(document.type) ? <TaxFormTemplate type={document.type}>{contents}</TaxFormTemplate>
       : ["books_profit_loss", "books_transaction_detail", "books_report", "mileage_log", "rental_ledger"].includes(document.type) ? <LedgerTemplate>{contents}</LedgerTemplate>

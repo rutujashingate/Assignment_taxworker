@@ -83,7 +83,7 @@ for(const [name,width,height] of [['small-phone',360,800],['phone',390,844],['ta
     await expect(page.getByRole('searchbox',{name:'Find a line or amount',exact:true})).toHaveValue('F1040.1a');
     const inspector=page.locator('#evidence-inspector');await expect(inspector.locator('.inspector-amount')).toHaveText('$212,400');
     await inspector.getByRole('link',{name:'Open source ev-0016',exact:true}).click();await expect(inspector.locator('.printed-selection')).toContainText('104,600.00');
-    const panel=await inspector.boundingBox(),header=await page.locator('.topbar').boundingBox();expect(panel!.y).toBeGreaterThanOrEqual(header!.y+header!.height);
+    const selected=inspector.getByTestId('printed-field-ev-0016');await expect(selected).toBeFocused();const field=await selected.boundingBox(),header=await page.locator('.topbar').boundingBox();expect(field!.y).toBeGreaterThanOrEqual(header!.y+header!.height);expect(field!.y+field!.height).toBeLessThanOrEqual(height);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/ui-${name}-wages-source.png`});
     await page.getByRole('link',{name:'Return to line list',exact:true}).click();await expect(page.locator('#return-lines')).toBeVisible();
   });
@@ -105,4 +105,12 @@ test('requested source text appears before extraction metadata and duplicate fie
   const inspector=page.locator('#evidence-inspector');
   expect(await inspector.locator('.inspector-source').evaluate(el=>Boolean(el.compareDocumentPosition(document.querySelector('.extraction-reading')!)&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   await expect(inspector.locator('.source-readings')).not.toHaveAttribute('open');await expect(inspector.getByTestId('printed-field-ev-0016')).toContainText('104,600.00');
+});
+
+test('a later printed field receives focus in the viewport; ambiguous reading falls back to the actual page',async({page})=>{
+  await enter(page,'st-04');await page.setViewportSize({width:360,height:800});await page.goto(`${base}/return?ref=D08`);
+  const id=await page.locator('#evidence-inspector [data-testid^="printed-field-ev-"]').last().getAttribute('data-testid');expect(id).toBeTruthy();const ref=id!.replace('printed-field-','');
+  await page.goto(`${base}/return?${new URLSearchParams({ref,line:'F1040.1a'})}`);
+  const field=page.getByTestId(id!);await expect(field).toBeFocused();const bounds=await field.boundingBox();expect(bounds!.y).toBeGreaterThanOrEqual(145);expect(bounds!.y+bounds!.height).toBeLessThanOrEqual(800);
+  await page.goto(`${base}/return?ref=ev-1049`);await expect(page.locator('#source-page-selection')).toBeFocused();await expect(page.locator('.printed-selection')).toHaveCount(0);await expect(page.getByTestId('printed-content')).toContainText('$?,500.00');
 });
