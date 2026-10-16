@@ -70,3 +70,32 @@ test('Review figures open their actual return/extraction reference or the comple
   const comparison=page.getByRole('region',{name:'Supporting source evidence',exact:true});await expect(comparison).toContainText('D28');await expect(comparison).toContainText('D29');
   await expect(page.locator('#evidence-inspector')).toHaveCount(0);
 });
+
+for(const [name,width,height] of [['small-phone',360,800],['phone',390,844],['tablet',768,1024],['landscape-tablet',1024,768],['desktop',1440,960]] as const){
+  test(`responsive CPA navigation and wage amount tracing: ${name}`,async({page})=>{
+    test.setTimeout(60000);await enter(page,'st-04');await page.setViewportSize({width,height});
+    for(const route of ['/firm',`${base}/review`,`${base}/return`,`${base}/documents`,`${base}/workflow`,`${base}/history`,`${base}/records/computation`,`${base}/records/business`,`${base}/records/sales`,`${base}/documents/D29`]){
+      await page.goto(route);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: ${route}`).toBe(true);
+      await expect(page.getByLabel('Demo identity')).toBeVisible();
+      if(route.endsWith('/review')){const next=page.locator('.next-review .button');await expect(next).toBeVisible();const box=await next.boundingBox();expect(box!.y+box!.height,`${name}: start action below initial viewport`).toBeLessThanOrEqual(height);await page.screenshot({path:`test-results/ui-${name}-review.png`});}
+    }
+    await page.goto(`${base}/return?q=F1040.1a`);await page.getByRole('link',{name:'Trace amount for F1040.1a',exact:true}).click();
+    await expect(page.getByRole('searchbox',{name:'Find a line or amount',exact:true})).toHaveValue('F1040.1a');
+    const inspector=page.locator('#evidence-inspector');await expect(inspector.locator('.inspector-amount')).toHaveText('$212,400');
+    await inspector.getByRole('link',{name:'Open source ev-0016',exact:true}).click();await expect(inspector.locator('.printed-selection')).toContainText('104,600.00');
+    const panel=await inspector.boundingBox(),header=await page.locator('.topbar').boundingBox();expect(panel!.y).toBeGreaterThanOrEqual(header!.y+header!.height);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/ui-${name}-wages-source.png`});
+    await page.getByRole('link',{name:'Return to line list',exact:true}).click();await expect(page.locator('#return-lines')).toBeVisible();
+  });
+}
+
+test('E01 E02 E08: keyboard-only wage number to D09 and back through tax usage',async({page})=>{
+  test.setTimeout(60000);await enter(page,'st-04');await page.setViewportSize({width:768,height:1024});await page.goto(`${base}/return?q=F1040.1a`);
+  const amount=page.getByRole('link',{name:'Trace amount for F1040.1a',exact:true});await tabTo(page,amount);await expect(amount).toBeFocused();await page.keyboard.press('Enter');
+  const inspector=page.locator('#evidence-inspector'),source=inspector.getByRole('link',{name:'Open source ev-0035',exact:true});await tabTo(page,source);await page.keyboard.press('Enter');
+  await expect(inspector.locator('.printed-selection')).toContainText('107,800.00');
+  const document=inspector.getByRole('link',{name:'Open D09 document',exact:true});await tabTo(page,document);await page.keyboard.press('Enter');
+  const field=page.getByTestId('printed-field-ev-0035');await tabTo(page,field);await page.keyboard.press('Enter');
+  const usage=page.getByRole('region',{name:'Tax line usage',exact:true}).getByRole('link',{name:'Open return line F1040.1a',exact:true});await tabTo(page,usage);await expect(usage).toContainText('212,400');await page.keyboard.press('Enter');
+  await expect(inspector.locator('.inspector-amount')).toHaveText('$212,400');
+});
